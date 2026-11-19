@@ -141,12 +141,9 @@ document.querySelector('#account-lookup').onsubmit = event => {
   event.preventDefault();
   if (!stButton.dataset.ready) lookupStatus.textContent = 'Для ST обновите QA Merge Checker до 1.4.0 и перезагрузите страницу.';
 };
-lookupButton.addEventListener('click', () => {
-  if (!lookupButton.dataset.ready) lookupStatus.textContent = 'Для запроса в чат обновите QA Merge Checker и перезагрузите страницу.';
-});
-lookupButton.addEventListener('fg-lookup-start', event => {
+lookupButton.addEventListener('fg-lookup-start', () => {
   clearLookup();
-  lookupStatus.textContent = (event.detail === 'st' ? 'Читаю карточку ST для аккаунта ' : 'Запрашиваю ФГ аккаунта ') + lookupId.value + '…';
+  lookupStatus.textContent = 'Читаю карточку ST для аккаунта ' + lookupId.value + '…';
   stProject.disabled = stButton.disabled = lookupId.readOnly = lookupButton.disabled = useDefaultId.disabled = true;
 });
 lookupButton.addEventListener('fg-lookup-result', event => {

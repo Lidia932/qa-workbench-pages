@@ -5,81 +5,83 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Команды ФГ · Roistat QA</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="focus-groups.css?v=5">
-  <script src="focus-groups.js?v=5" defer></script>
+  <link rel="stylesheet" href="focus-groups.css?v=6">
+  <script src="focus-groups.js?v=6" defer></script>
 </head>
 <body>
   <header><div class="wrap brand"><span class="logo">QA</span> Roistat QA <a href="./index.html">Каталог</a></div></header>
   <main class="wrap">
     <h1>Команды фокус-групп</h1>
-    <details class="defaults">
-      <summary>ID аккаунта по умолчанию</summary>
-      <form id="defaults">
-        <label>ID аккаунта<input id="default-account" inputmode="numeric" pattern="[0-9]+" placeholder="ID аккаунта"></label>
-        <button>Сохранить</button><small id="default-status" role="status"></small>
-      </form>
-    </details>
-    <fieldset class="groups">
-      <legend>Раздел</legend>
-      <label><input type="radio" name="group" value="account" checked>Аккаунт</label>
-      <label><input type="radio" name="group" value="market">Маркетплейс</label>
-      <label><input type="radio" name="group" value="all">Снять у всех пользователей</label>
-      <label><input type="radio" name="group" value="other">Прочее</label>
-    </fieldset>
-    <div class="workspace">
-      <form id="builder" autocomplete="off">
-        <label id="operation-label">Действие<select id="operation"></select></label>
-        <div id="arguments"></div>
-      </form>
-      <div class="result">
-        <h2><label for="preview">Команда для чата</label></h2>
-        <textarea id="preview" rows="4" readonly spellcheck="false"></textarea>
-        <div class="actions">
-          <button type="submit" form="builder">Скопировать команду</button>
-          <button type="button" id="send-command">Отправить в tools-product</button>
-          <a href="https://roistat.chat.platrum.ru/c9d2f3fa6bb6d63bbd9f589250d36698/channels/tools-product" target="_blank" rel="noopener noreferrer">Открыть tools-product ↗</a>
-        </div>
-        <small id="status" role="status"></small>
-        <small id="send-help">Для отправки войдите в Platrum в этом профиле Chrome и установите <a href="./index.html#extensions">QA Merge Checker</a>.</small>
-      </div>
-    </div>
-    <div class="libraries">
-      <div class="library" aria-labelledby="recent-title">
-        <h2 id="recent-title">Недавние ФГ</h2>
+    <div class="fg-layout">
+      <details class="library side recent-side" open>
+        <summary>Недавние ФГ</summary>
         <ul id="recent-list"></ul>
         <p id="recent-empty">Здесь появятся ФГ из скопированных и отправленных команд.</p>
+      </details>
+      <div class="fg-main">
+        <details class="defaults">
+          <summary>ID аккаунта по умолчанию</summary>
+          <form id="defaults">
+            <label>ID аккаунта<input id="default-account" inputmode="numeric" pattern="[0-9]+" placeholder="ID аккаунта"></label>
+            <button>Сохранить</button><small id="default-status" role="status"></small>
+          </form>
+        </details>
+        <fieldset class="groups">
+          <legend>Раздел</legend>
+          <label><input type="radio" name="group" value="account" checked>Аккаунт</label>
+          <label><input type="radio" name="group" value="market">Маркетплейс</label>
+          <label><input type="radio" name="group" value="all">Снять у всех пользователей</label>
+          <label><input type="radio" name="group" value="other">Прочее</label>
+        </fieldset>
+        <div class="workspace">
+          <form id="builder" autocomplete="off">
+            <label id="operation-label">Действие<select id="operation"></select></label>
+            <div id="arguments"></div>
+          </form>
+          <div class="result">
+            <h2><label for="preview">Команда для чата</label></h2>
+            <textarea id="preview" rows="4" readonly spellcheck="false"></textarea>
+            <div class="actions">
+              <button type="submit" form="builder">Скопировать команду</button>
+              <button type="button" id="send-command">Отправить в tools-product</button>
+              <a href="https://roistat.chat.platrum.ru/c9d2f3fa6bb6d63bbd9f589250d36698/channels/tools-product" target="_blank" rel="noopener noreferrer">Открыть tools-product ↗</a>
+            </div>
+            <small id="status" role="status"></small>
+            <small id="send-help">Для отправки войдите в Platrum в этом профиле Chrome и установите <a href="./index.html#extensions">QA Merge Checker</a>.</small>
+          </div>
+        </div>
+        <small id="list-status" role="status"></small>
+        <div class="library account-groups" aria-labelledby="account-groups-title">
+          <h2 id="account-groups-title">ФГ на аккаунте</h2>
+          <form id="account-lookup" autocomplete="off">
+            <label>ID аккаунта<input id="lookup-id" required pattern="[0-9]+" inputmode="numeric"></label>
+            <button type="button" id="use-default-id">Подставить ID по умолчанию</button>
+            <button id="st-button" type="submit">Прочитать из ST</button>
+            <!-- QA Merge Checker 1.4 uses this form control to relay ST results. -->
+            <input type="hidden" id="lookup-button">
+          </form>
+          <details id="st-settings"><summary>Проект для чтения из ST</summary>
+            <label>ID проекта этого аккаунта<input id="st-project" inputmode="numeric" pattern="[0-9]+" placeholder="ID проекта"></label>
+            <small>Расширение найдёт проект в открытых карточках ST этого окна или по указанному ID. После сверки владельца оно запомнит проект на этом компьютере.</small>
+          </details>
+          <small id="st-help">Для чтения из ST войдите в Roistat и обновите <a href="./index.html#extensions">QA Merge Checker до 1.4.0</a>.</small>
+          <span id="lookup-help" hidden></span>
+          <p id="lookup-status" role="status"></p>
+          <div id="group-browser" hidden>
+            <label for="group-filter">Найти ФГ в результате</label>
+            <input type="search" id="group-filter" placeholder="Часть названия" autocomplete="off">
+            <div id="account-list" role="group" aria-label="Выберите ФГ"></div>
+            <small id="group-count" role="status"></small>
+            <ul id="group-actions" aria-label="Действия с выбранной ФГ"></ul>
+          </div>
+        </div>
       </div>
-      <div class="library" aria-labelledby="saved-title">
-        <h2 id="saved-title">Сохранённые ФГ</h2>
+      <details class="library side saved-side">
+        <summary>Сохранённые ФГ</summary>
         <form id="save-group"><label>Название ФГ<input name="name" required pattern="[^,\s]+" autocomplete="off"></label><button>Добавить</button></form>
         <ul id="saved-list"></ul>
         <p id="saved-empty">Список пока пуст.</p>
-      </div>
-    </div>
-    <small id="list-status" role="status"></small>
-    <div class="library account-groups" aria-labelledby="account-groups-title">
-      <h2 id="account-groups-title">ФГ на аккаунте</h2>
-      <form id="account-lookup" autocomplete="off">
-        <label>ID аккаунта<input id="lookup-id" required pattern="[0-9]+" inputmode="numeric"></label>
-        <button type="button" id="use-default-id">Подставить ID по умолчанию</button>
-        <button id="st-button" type="submit">Прочитать из ST</button>
-        <button id="lookup-button" type="button">Запросить в tools-product</button>
-      </form>
-      <details id="st-settings"><summary>Проект для чтения из ST</summary>
-        <label>ID проекта этого аккаунта<input id="st-project" inputmode="numeric" pattern="[0-9]+" placeholder="ID проекта"></label>
-        <small>Расширение найдёт проект в открытых карточках ST этого окна или по указанному ID. После сверки владельца оно запомнит проект на этом компьютере.</small>
       </details>
-      <small id="st-help">Для чтения из ST войдите в Roistat и обновите <a href="./index.html#extensions">QA Merge Checker до 1.4.0</a>.</small>
-      <small>Кнопка «Запросить в tools-product» отправляет в чат <code>/erp show_user_focus_groups</code> с указанным ID.</small>
-      <small id="lookup-help">Для запроса нужен вход в Platrum и <a href="./index.html#extensions">QA Merge Checker 1.3.0</a>.</small>
-      <p id="lookup-status" role="status"></p>
-      <div id="group-browser" hidden>
-        <label for="group-filter">Найти ФГ в результате</label>
-        <input type="search" id="group-filter" placeholder="Часть названия" autocomplete="off">
-        <div id="account-list" role="group" aria-label="Выберите ФГ"></div>
-        <small id="group-count" role="status"></small>
-        <ul id="group-actions" aria-label="Действия с выбранной ФГ"></ul>
-      </div>
     </div>
   </main>
 </body>
