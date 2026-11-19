@@ -1,5 +1,6 @@
 .brand a { margin-left: auto; padding: .45rem; border: 0; }
 .defaults { margin: 0 0 1rem; padding: .75rem 1rem; background: #eef6f1; border-left: 3px solid #356655; }
+.defaults summary { color: #285844; font-weight: 600; cursor: pointer; }
 .defaults label { flex: 0 1 16rem; }
 .defaults input { margin-top: .25rem; }
 .recent { margin-top: .6rem; }
@@ -22,5 +23,7 @@ input[type=radio] { width: 1rem; height: 1rem; margin: 0; accent-color: #166575;
 #preview { display: block; width: 100%; padding: .85rem 1rem; border: 0; border-radius: 5px; background: #105363; color: white; font: 1rem/1.55 monospace; overflow-wrap: anywhere; resize: vertical; }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem; margin: .85rem 0 .45rem; }
 .actions button { background: #155c50; color: white; }
+#send-command { background: #255b93; border-color: #255b93; }
+#send-command:hover:not(:disabled) { background: #194774; }
 .actions a { display: inline-block; padding: .3rem; border: 0; }
 @media (max-width: 750px) { .workspace { grid-template-columns: 1fr; } }

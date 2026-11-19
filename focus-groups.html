@@ -5,17 +5,20 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Команды ФГ · Roistat QA</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="focus-groups.css?v=2">
+  <link rel="stylesheet" href="focus-groups.css?v=3">
   <script src="focus-groups.js?v=2" defer></script>
 </head>
 <body>
   <header><div class="wrap brand"><span class="logo">QA</span> Roistat QA <a href="./index.html">Каталог</a></div></header>
   <main class="wrap">
     <h1>Команды фокус-групп</h1>
-    <form id="defaults" class="defaults">
-      <label>ID аккаунта по умолчанию<input id="default-account" inputmode="numeric" pattern="[0-9]+" placeholder="ID аккаунта"></label>
-      <button>Сохранить</button><small id="default-status" role="status"></small>
-    </form>
+    <details class="defaults">
+      <summary>ID аккаунта по умолчанию</summary>
+      <form id="defaults">
+        <label>ID аккаунта<input id="default-account" inputmode="numeric" pattern="[0-9]+" placeholder="ID аккаунта"></label>
+        <button>Сохранить</button><small id="default-status" role="status"></small>
+      </form>
+    </details>
     <fieldset class="groups">
       <legend>Раздел</legend>
       <label><input type="radio" name="group" value="account" checked>Аккаунт</label>
