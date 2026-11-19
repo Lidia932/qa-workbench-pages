@@ -90,35 +90,78 @@ const lookupButton = document.querySelector('#lookup-button');
 const lookupStatus = document.querySelector('#lookup-status');
 const useDefaultId = document.querySelector('#use-default-id');
 let accountGroups = [];
+let selectedGroup = '';
+const groupFilter = document.querySelector('#group-filter');
+const groupButtons = document.querySelector('#account-list');
+const stButton = document.querySelector('#st-button');
+const stProject = document.querySelector('#st-project');
 lookupId.value = defaultAccount;
 useDefaultId.disabled = !defaultAccount;
 function renderAccountGroups() {
-  document.querySelector('#account-list').replaceChildren(...accountGroups.map(name => listRow(name, 'account')));
+  document.querySelector('#group-browser').hidden = !accountGroups.length;
+  const query = groupFilter.value.trim().toLowerCase();
+  const matches = accountGroups.filter(name => name.toLowerCase().includes(query));
+  if (!matches.includes(selectedGroup)) selectedGroup = '';
+  groupButtons.replaceChildren(...matches.map(name => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = name;
+    button.setAttribute('aria-pressed', String(name === selectedGroup));
+    return button;
+  }));
+  document.querySelector('#group-count').textContent = query
+    ? 'Найдено: ' + matches.length + ' из ' + accountGroups.length
+    : 'Выберите название для копирования, подстановки или сохранения.';
+  renderGroupActions();
 }
+function renderGroupActions() {
+  const actions = document.querySelector('#group-actions');
+  actions.replaceChildren();
+  if (selectedGroup) actions.append(listRow(selectedGroup, 'account'));
+}
+groupButtons.onclick = event => {
+  if (event.target.tagName !== 'BUTTON') return;
+  groupButtons.querySelector('[aria-pressed=true]')?.setAttribute('aria-pressed', 'false');
+  selectedGroup = event.target.textContent;
+  event.target.setAttribute('aria-pressed', 'true');
+  renderGroupActions();
+};
+groupFilter.oninput = renderAccountGroups;
 function clearLookup() {
   accountGroups = [];
+  selectedGroup = '';
+  groupFilter.value = '';
   lookupStatus.textContent = '';
   renderAccountGroups();
 }
-lookupId.addEventListener('input', clearLookup);
-useDefaultId.onclick = () => { lookupId.value = defaultAccount; clearLookup(); };
+function resetLookupAccount() { stProject.value = ''; clearLookup(); }
+lookupId.addEventListener('input', resetLookupAccount);
+useDefaultId.onclick = () => { lookupId.value = defaultAccount; resetLookupAccount(); };
 document.querySelector('#account-lookup').onsubmit = event => {
   event.preventDefault();
-  if (!lookupButton.dataset.ready) lookupStatus.textContent = 'Обновите QA Merge Checker и перезагрузите страницу.';
+  if (!stButton.dataset.ready) lookupStatus.textContent = 'Для ST обновите QA Merge Checker до 1.4.0 и перезагрузите страницу.';
 };
-lookupButton.addEventListener('fg-lookup-start', () => {
+lookupButton.addEventListener('click', () => {
+  if (!lookupButton.dataset.ready) lookupStatus.textContent = 'Для запроса в чат обновите QA Merge Checker и перезагрузите страницу.';
+});
+lookupButton.addEventListener('fg-lookup-start', event => {
   clearLookup();
-  lookupStatus.textContent = 'Запрашиваю ФГ аккаунта ' + lookupId.value + '…';
-  lookupId.readOnly = lookupButton.disabled = useDefaultId.disabled = true;
+  lookupStatus.textContent = (event.detail === 'st' ? 'Читаю карточку ST для аккаунта ' : 'Запрашиваю ФГ аккаунта ') + lookupId.value + '…';
+  stProject.disabled = stButton.disabled = lookupId.readOnly = lookupButton.disabled = useDefaultId.disabled = true;
 });
 lookupButton.addEventListener('fg-lookup-result', event => {
   const result = JSON.parse(event.detail);
-  lookupId.readOnly = lookupButton.disabled = false;
+  stProject.disabled = stButton.disabled = lookupId.readOnly = lookupButton.disabled = false;
   useDefaultId.disabled = !defaultAccount;
   if (result.account !== lookupId.value) { clearLookup(); return; }
+  if (result.needProject) {
+    document.querySelector('#st-settings').open = true;
+    stProject.focus();
+  }
+  if (result.project) stProject.value = result.project;
   accountGroups = result.groups || [];
   renderAccountGroups();
-  lookupStatus.textContent = result.error || ('Аккаунт ' + result.account + (accountGroups.length ? ' · ФГ: ' + accountGroups.length : ' · Нет ФГ'));
+  lookupStatus.textContent = result.error || ('Аккаунт ' + result.account + (accountGroups.length ? ' · ФГ: ' + accountGroups.length : ' · Нет ФГ') + (result.project ? ' · ST' : ' · tools-product'));
 });
 function usedGroups() {
   if (form.elements.groups) return form.elements.groups.value.split(',').map(name => name.trim()).filter(Boolean);
@@ -199,7 +242,7 @@ document.querySelector('#defaults').onsubmit = event => {
     localStorage.setItem(accountKey, value);
     if (!lookupId.readOnly && (!lookupId.value || lookupId.value === defaultAccount)) {
       lookupId.value = value;
-      clearLookup();
+      resetLookupAccount();
     }
     defaultAccount = value;
     useDefaultId.disabled = !value || lookupId.readOnly;

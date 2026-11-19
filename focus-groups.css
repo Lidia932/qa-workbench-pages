@@ -17,6 +17,17 @@
 .account-groups small[hidden] { display: none; }
 .account-groups small a { display: inline; padding: 0; }
 .account-groups p:not(:empty) { margin: .6rem 0; }
+#st-settings { margin: .5rem 0; }
+#st-settings summary { color: #285844; cursor: pointer; }
+#st-settings label { margin-top: .5rem; }
+#st-settings input { display: block; }
+#group-browser { margin-top: .75rem; }
+#group-browser input { width: min(100%, 28rem); }
+#account-list { display: flex; flex-wrap: wrap; align-content: start; gap: .35rem; max-height: 16rem; overflow-y: auto; padding: .45rem; margin-top: .5rem; background: #f3f7f5; border-radius: 4px; }
+#account-list:empty { display: none; }
+#account-list button { max-width: 100%; border-radius: .35rem; padding: .24rem .5rem; font: .83rem/1.35 monospace; overflow-wrap: anywhere; text-align: left; }
+#account-list button[aria-pressed=true] { color: white; background: #166575; border-color: #166575; }
+#group-count { padding-block: .35rem; }
 @media (max-width: 750px) { .libraries { grid-template-columns: 1fr; } }
 #send-help { display: block; color: #50635e; margin-top: .4rem; }
 #send-help[hidden] { display: none; }
