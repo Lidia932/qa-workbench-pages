@@ -311,9 +311,10 @@ function outgoingMessage() {
 document.querySelector('#copy').onclick = async () => {
   const text = outgoingMessage();
   if (!text) return;
+  const plan = currentPlan();
   try {
     await navigator.clipboard.writeText(text);
-    statusLine.textContent = savePlan() ? 'Скопировано. План сохранён.' : 'Скопировано. Сохранить план в браузере не удалось.';
+    statusLine.textContent = savePlan(plan) ? 'Скопировано. План сохранён.' : 'Скопировано. Сохранить план в браузере не удалось.';
   } catch {
     const manual = document.querySelector('#manual-copy');
     manual.hidden = false;
@@ -324,16 +325,27 @@ document.querySelector('#copy').onclick = async () => {
   }
 };
 const sendStandup = document.querySelector('#send-standup');
+let pendingPlan = null;
 sendStandup.addEventListener('click', event => {
+  if (!event.isTrusted || pendingPlan) {
+    event.stopImmediatePropagation();
+    return;
+  }
   if (!outgoingMessage()) {
     event.stopImmediatePropagation();
     return;
   }
-  statusLine.textContent = sendStandup.dataset.ready
-    ? 'Отправка в qa-standup…'
-    : 'Для отправки установите QA Merge Checker 1.5.0 и обновите вкладку.';
+  if (!sendStandup.dataset.ready) {
+    statusLine.textContent = 'Для отправки установите QA Merge Checker 1.5.0 и обновите вкладку.';
+    return;
+  }
+  pendingPlan = currentPlan();
+  statusLine.textContent = 'Отправка в qa-standup…';
 }, {capture: true});
 sendStandup.addEventListener('qa-standup-sent', event => {
+  const plan = pendingPlan;
+  pendingPlan = null;
+  if (!plan) return;
   const result = JSON.parse(event.detail);
   if (!/^[a-z0-9]{26}$/.test(result.id)) {
     statusLine.textContent = result.error || 'Не удалось подтвердить отправку.';
@@ -344,5 +356,6 @@ sendStandup.addEventListener('qa-standup-sent', event => {
   link.target = '_blank';
   link.rel = 'noopener noreferrer';
   link.textContent = 'Открыть сообщение';
-  statusLine.replaceChildren('Отправлено в qa-standup. ', link);
+  const note = savePlan(plan) ? 'План на сегодня сохранён.' : 'Сохранить план в браузере не удалось.';
+  statusLine.replaceChildren('Отправлено в qa-standup. ' + note + ' ', link);
 });

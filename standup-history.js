@@ -11,7 +11,7 @@ function dayKey(date = new Date()) {
 function storedPlans() {
   return JSON.parse(localStorage.getItem(planKey) || '{}');
 }
-function savePlan() {
+function currentPlan() {
   const items = [];
   for (const row of plans.children) {
     if (row.hidden) continue;
@@ -26,9 +26,12 @@ function savePlan() {
       }
     }
   }
+  return {date: dayKey(), items};
+}
+function savePlan({date, items}) {
   try {
     const history = storedPlans();
-    history[dayKey()] = items;
+    history[date] = items;
     const dates = Object.keys(history).sort().slice(-7);
     localStorage.setItem(planKey, JSON.stringify(Object.fromEntries(dates.map(date => [date,history[date]]))));
     return true;
@@ -186,11 +189,6 @@ document.querySelector('#reset-yesterday').onclick = () => {
   block.querySelectorAll('#review-title, #post-status, #parse-status, #skipped-lines').forEach(el => el.textContent = '');
   block.querySelectorAll('details').forEach(el => el.open = el.classList.contains('import-bar'));
   render();
-};
-document.querySelector('#save-plan').onclick = () => {
-  const invalid = plans.querySelector(':invalid');
-  if (invalid) return invalid.reportValidity();
-  statusLine.textContent = savePlan() ? 'План на сегодня сохранён.' : 'Браузер не разрешил сохранить план.';
 };
 window.addEventListener('focus', refreshPrevious);
 refreshPrevious();
