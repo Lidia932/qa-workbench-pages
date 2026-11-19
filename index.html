@@ -3,10 +3,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Roistat QA · Рабочие инструменты</title>
-<link rel="stylesheet" href="style.css?v=fg1">
+<link rel="stylesheet" href="style.css?v=shortcuts1">
 <header><div class="wrap brand"><span class="logo" aria-hidden="true">QA</span> Roistat QA</div></header>
 <main class="wrap">
-  <h1>Рабочие инструменты</h1>
+  <div class="catalog-head">
+    <h1>Рабочие инструменты</h1>
+    <input id="search" type="search" aria-label="Поиск по каталогу" placeholder="Поиск по инструментам" autocomplete="off">
+  </div>
+  <nav id="shortcuts" aria-label="Быстрый доступ к инструментам" hidden></nav>
+  <template id="shortcut-api">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m13 2-9 12h7l-1 8 10-13h-8z"/></svg>
+  </template>
+  <template id="shortcut-cases">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="17" rx="2"/><path d="M9 3h6v3H9zM7 11l1.2 1.2 2.4-2.5M13 11h4M7 16l1.2 1.2 2.4-2.5M13 16h4"/></svg>
+  </template>
+  <template id="shortcut-pr">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/><path d="M6 7v10m12 0v-6a6 6 0 0 0-6-6h-1m3-3-3 3 3 3"/></svg>
+  </template>
+  <template id="shortcut-deploy">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V3m-5 5 5-5 5 5M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
+  </template>
   <div class="quick-access">
   <aside aria-labelledby="fav-title">
     <div class="fav-head"><h2 id="fav-title">Избранное</h2><button id="add" type="button" aria-expanded="false" aria-controls="editor">+ Добавить вкладку</button></div>
@@ -21,8 +37,6 @@
   </aside>
   <img class="sticker" src="sticker.webp" alt="У нас тут не демократия">
   </div>
-  <label for="search">Поиск по каталогу</label>
-  <input id="search" type="search" placeholder="Название или задача" autocomplete="off">
   <div id="catalog"></div>
   <template id="install-guide">
     <details class="install-guide">
@@ -37,7 +51,7 @@
   </template>
   <p id="empty" role="status" hidden>По этому запросу инструментов нет.</p>
 </main>
-<script src="tools.js?v=standup-send1"></script>
-<script src="catalog.js"></script>
+<script src="tools.js?v=shortcuts1"></script>
+<script src="catalog.js?v=shortcuts1"></script>
 <script src="favorites.js"></script>
 </html>

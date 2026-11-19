@@ -1,4 +1,5 @@
 const catalog = document.querySelector('#catalog');
+const shortcuts = document.querySelector('#shortcuts');
 const search = document.querySelector('#search');
 
 function element(tag, text) {
@@ -10,16 +11,28 @@ function element(tag, text) {
 function render() {
   const query = search.value.trim().toLocaleLowerCase('ru');
   const groups = new Map();
-  for (const [group, name, description, url] of tools) {
+  const quickLinks = [];
+  for (const [group, name, description, url, icon] of tools) {
     if (![group, name, description].join(' ').toLocaleLowerCase('ru').includes(query)) continue;
+    const link = element('a', '');
+    link.href = url;
+    if (!url.startsWith('./downloads/')) {
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+    }
+    if (icon) {
+      link.dataset.icon = icon;
+      link.title = description;
+      link.append(document.querySelector('#shortcut-' + icon).content.cloneNode(true), element('strong', name));
+      quickLinks.push(link);
+      continue;
+    }
     if (!groups.has(group)) {
       const section = document.createElement('section');
       section.dataset.group = group;
       section.append(element('h2', group));
       groups.set(group, section);
     }
-    const link = element('a', '');
-    link.href = url;
     if (url.startsWith('./downloads/')) {
       const row = element('div', '');
       row.className = 'extension-row';
@@ -33,8 +46,6 @@ function render() {
       groups.get(group).append(row);
       continue;
     }
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
     link.append(element('strong', name), element('span', description));
     groups.get(group).append(link);
   }
@@ -44,7 +55,9 @@ function render() {
     extensions.append(document.querySelector('#install-guide').content.cloneNode(true));
   }
   catalog.replaceChildren(...groups.values());
-  document.querySelector('#empty').hidden = groups.size !== 0;
+  shortcuts.replaceChildren(...quickLinks);
+  shortcuts.hidden = quickLinks.length === 0;
+  document.querySelector('#empty').hidden = groups.size + quickLinks.length > 0;
 }
 search.addEventListener('input', render);
 render();

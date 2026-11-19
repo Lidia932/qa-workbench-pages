@@ -8,6 +8,21 @@ header { background: white; border-bottom: 1px solid #d8e3df; }
 main { padding-block: 2rem 4rem; }
 h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 1.5rem; }
 label { display: block; font-size: .875rem; font-weight: 600; margin-bottom: .35rem; }
+.catalog-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem 1rem; margin-bottom: 1.25rem; }
+.catalog-head h1 { margin: 0; }
+.catalog-head input { width: min(100%, 16rem); }
+#shortcuts:not([hidden]) { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; margin-bottom: 1.5rem; }
+#shortcuts a { --ink: #17664b; --tint: #e4f4ea; display: flex; grid-area: auto; flex-flow: row nowrap; align-items: center; justify-content: flex-start; gap: .65rem; padding: .7rem; background: white; color: #192b32; border: 1px solid #cedbd6; border-radius: .5rem; }
+#shortcuts [data-icon="cases"] { --ink: #584398; --tint: #f0ebfb; }
+#shortcuts [data-icon="pr"] { --ink: #245b88; --tint: #e6f1fa; }
+#shortcuts [data-icon="deploy"] { --ink: #90501b; --tint: #fbefdf; }
+#shortcuts a:hover, #shortcuts a:focus-visible { border-color: var(--ink); background: var(--tint); }
+#shortcuts svg { flex: none; width: 2.4rem; height: 2.4rem; padding: .5rem; border-radius: .45rem; color: var(--ink); background: var(--tint); fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 650px) {
+  #shortcuts:not([hidden]) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #shortcuts a { padding: .5rem; gap: .4rem; }
+  #shortcuts svg { width: 1.9rem; height: 1.9rem; padding: .35rem; }
+}
 .quick-access { display: grid; grid-template-columns: minmax(0, 1fr) minmax(8rem, 20%); gap: 1.25rem; align-items: center; margin-bottom: 1.6rem; }
 .quick-access aside { margin-bottom: 0; }
 .sticker { display: block; width: 100%; max-height: 11rem; object-fit: contain; }
