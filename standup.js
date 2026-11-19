@@ -247,6 +247,19 @@ function render() {
 }
 
 document.querySelector('#add-task').onclick = () => addPlan('task');
+document.querySelector('#reset-today').onclick = () => {
+  plans.querySelectorAll('.task').forEach(row => row.remove());
+  for (const lead of plans.querySelectorAll('.lead')) lead.value = '';
+  for (const input of plans.querySelectorAll('input:checked')) input.checked = false;
+  document.querySelector('[name=today-count][value="1"]').checked = true;
+  document.querySelector('#other').value = '';
+  document.querySelector('.current details').open = false;
+  render();
+};
+document.querySelector('#reset-problems').onclick = () => {
+  document.querySelector('#problems').value = '';
+  render();
+};
 for (const container of document.querySelectorAll('#accepted-tasks, #deferred-tasks')) {
   const add = document.createElement('button');
   add.textContent = '+ Ещё задача';

@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Стендап · Roistat QA</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="standup.css?v=20261119-outcome">
-  <script src="standup.js?v=20261119-preview" defer></script>
-  <script src="standup-history.js?v=20261119-preview" defer></script>
+  <link rel="stylesheet" href="standup.css?v=20261119-reset">
+  <script src="standup.js?v=20261119-reset" defer></script>
+  <script src="standup-history.js?v=20261119-reset" defer></script>
   <script src="standup-team.js?v=20261119-preview" defer></script>
 </head>
 <body>
@@ -16,7 +16,7 @@
     <div class="page-title"><h1>Стендап</h1><button id="edit-team" aria-haspopup="dialog">Состав QA</button></div>
     <div class="workspace">
       <div id="fields">
-        <fieldset class="day past"><legend>Вчера</legend>
+        <fieldset class="day past"><legend>Вчера <button class="section-reset" id="reset-yesterday" type="button" aria-label="Сбросить блок Вчера">Сбросить</button></legend>
           <details class="import-bar" open><summary>Импорт прошлого стендапа</summary>
             <label for="platrum-url">Ссылка на прошлый стендап в Platrum</label>
             <input id="platrum-url" type="url" placeholder="https://roistat.chat.platrum.ru/…/pl/…">
@@ -54,7 +54,7 @@
             <textarea id="yesterday" aria-label="Другие итоги" rows="2"></textarea>
           </details>
         </fieldset>
-        <fieldset class="day current"><legend>Сегодня</legend>
+        <fieldset class="day current"><legend>Сегодня <button class="section-reset" id="reset-today" type="button" aria-label="Сбросить блок Сегодня">Сбросить</button></legend>
           <fieldset class="count"><legend>Сколько релизов планируем?</legend>
             <label><input type="radio" name="today-count" value="0">Без релизов</label>
             <label><input type="radio" name="today-count" value="1" checked>1 релиз</label>
@@ -64,7 +64,7 @@
           <div class="actions"><button id="add-task">+ Приёмка</button></div>
           <details><summary>Другие планы</summary><textarea id="other" aria-label="Другие планы" rows="2"></textarea></details>
         </fieldset>
-        <fieldset class="day blockers"><legend>Проблемы</legend>
+        <fieldset class="day blockers"><legend>Проблемы <button class="section-reset" id="reset-problems" type="button" aria-label="Сбросить блок Проблемы">Сбросить</button></legend>
           <textarea id="problems" aria-label="Что мешает работе?" rows="1" placeholder="—"></textarea>
         </fieldset>
       </div>

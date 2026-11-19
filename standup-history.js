@@ -135,10 +135,13 @@ function importBody(body, title, status) {
 }
 const loadPost = document.querySelector('#load-post');
 const postStatus = document.querySelector('#post-status');
+let discardPendingImport = false;
 loadPost.onclick = () => {
+  discardPendingImport = false;
   postStatus.textContent = loadPost.dataset.ready ? 'Читаю сообщение…' : 'Установите QA Merge Checker 1.1.0 из каталога и обновите вкладку. Для чтения нужен вход в Platrum.';
 };
 loadPost.addEventListener('qa-standup-result', event => {
+  if (discardPendingImport) return;
   const result = JSON.parse(event.detail);
   if (result.error) {postStatus.textContent = result.error;return;}
   importBody(result.today, 'План из Platrum', postStatus);
@@ -158,6 +161,21 @@ previous.onclick = () => {
   }
 };
 document.querySelector('#manual-mode').onclick = () => {review.hidden = true;manualYesterday.hidden = false;render();};
+document.querySelector('#reset-yesterday').onclick = () => {
+  const block = document.querySelector('.past');
+  discardPendingImport = loadPost.disabled;
+  imported = [];
+  reviewItems.replaceChildren();
+  review.hidden = true;
+  manualYesterday.hidden = false;
+  block.querySelectorAll('.manual-task').forEach(row => row.remove());
+  block.querySelectorAll('input[type=checkbox]').forEach(input => input.checked = false);
+  block.querySelector('[name=past-count][value="0"]').checked = true;
+  block.querySelectorAll('textarea, input[type=url]').forEach(input => input.value = '');
+  block.querySelectorAll('#review-title, #post-status, #parse-status, #skipped-lines').forEach(el => el.textContent = '');
+  block.querySelectorAll('details').forEach(el => el.open = el.classList.contains('import-bar'));
+  render();
+};
 document.querySelector('#save-plan').onclick = () => {
   const invalid = plans.querySelector(':invalid');
   if (invalid) return invalid.reportValidity();
