@@ -79,13 +79,16 @@ function reviewedRows() {
     const value = selects[index].value;
     const row = reviewItems.children[index];
     const field = row.querySelector('input[type=url]');
-    if (field) field.required = Boolean(value);
+    let href = taskHref(item.href);
+    if (field) {
+      field.required = Boolean(value);
+      href = checkTaskLink(field, Boolean(value));
+    }
     if (!value) return;
     const verb = value === 'yes' ? 'Провели' : 'Не провели';
     if (item.number) rows.push([verb + ' релиз №' + item.number]);
     else {
-      const href = taskHref(field ? field.value : item.href);
-      if (href) rows.push(acceptanceParts(verb + ' приемку', item.title, href, row));
+      rows.push(acceptanceParts(verb + ' приемку', item.title, href, row));
     }
   });
   return rows;

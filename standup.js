@@ -74,7 +74,7 @@ function appendPeople(parts, logins) {
 }
 
 function acceptanceParts(phrase, title, href, row) {
-  const parts = [phrase + ' ', {title, href}];
+  const parts = [phrase + ' ', href ? {title, href} : title];
   const qa = selectedPeople(row);
   if (qa.length) {
     parts.push(' QA ');
@@ -89,6 +89,28 @@ function taskHref(value) {
     return /^https?:$/.test(url.protocol) ? url.href : '';
   } catch { return ''; }
 }
+
+function checkTaskLink(input, active = true) {
+  const href = taskHref(input.value);
+  const invalid = active && (!href || input.validity.patternMismatch || input.validity.typeMismatch);
+  const message = invalid ? 'Введите полную ссылку на задачу с https:// или http://.' : '';
+  input.setCustomValidity(message);
+  input.setAttribute('aria-invalid', String(invalid));
+  let hint = input.nextElementSibling;
+  if (invalid && !hint?.classList.contains('link-error')) {
+    hint = document.createElement('small');
+    hint.className = 'link-error';
+    hint.id = 'task-link-error-' + (++linkErrorId);
+    input.after(hint);
+    input.setAttribute('aria-describedby', hint.id);
+  }
+  if (hint?.classList.contains('link-error')) {
+    hint.textContent = message;
+    hint.hidden = !invalid;
+  }
+  return invalid ? '' : href;
+}
+let linkErrorId = 0;
 
 function manualTask(container) {
   const row = document.createElement('div');
@@ -141,8 +163,8 @@ function yesterday() {
     for (const row of container.querySelectorAll('.manual-task')) {
       const title = row.querySelector('.task-name').value.trim();
       row.querySelector('.task-name').setCustomValidity(title ? '' : 'Введите название задачи');
-      const href = taskHref(row.querySelector('.url').value);
-      if (title && href) rows.push(acceptanceParts(phrase, title, href, row));
+      const href = checkTaskLink(row.querySelector('.url'));
+      if (title) rows.push(acceptanceParts(phrase, title, href, row));
     }
   }
   return rows.concat(lines('#yesterday'));
@@ -169,8 +191,9 @@ function today() {
       const url = row.querySelector('.url');
       const title = titleInput.value.trim();
       titleInput.setCustomValidity(!title ? 'Введите название задачи' : '');
-      if (!title || !url.validity.valid) continue;
-      parts.push(...acceptanceParts('Проведем приемку', title, url.value, row));
+      const href = checkTaskLink(url);
+      if (!title) continue;
+      parts.push(...acceptanceParts('Проведем приемку', title, href, row));
     }
     entries.push(parts);
   }
