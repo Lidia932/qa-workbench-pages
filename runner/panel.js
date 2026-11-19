@@ -19,8 +19,18 @@ let refreshTimer;
 let revision;
 
 function explainFailure(message) {
+  const heading = message.trim().split(/\r?\n/, 1)[0].replace(/^(?:(?:Assertion)?Error|Ошибка):\s*/i, '');
   const expected = message.match(/^\s*Expected(?: (?:value|length|string|substring|pattern|array|object))?:\s*([^\r\n]+)/im)?.[1]?.trim();
   const received = message.match(/^\s*Received(?: (?:value|length|string|array|object))?:\s*([^\r\n]+)/im)?.[1]?.trim();
+  if (/^Set E2E_ANALYTICS_FILTERS_PROJECT_ID\b/i.test(heading)) {
+    const requiredId = expected?.match(/^"?(\d+)"?$/)?.[1] || heading.match(/PROJECT_ID=(\d+)/)?.[1];
+    const actualId = received?.match(/^"?(\d+)"?$/)?.[1];
+    const project = requiredId ? 'в проекте ' + requiredId : 'в отдельном проекте';
+    const actual = actualId ? ' Для запуска выбран проект ' + actualId + '.' : received === '""' ? ' ID проекта для запуска пуст.' : '';
+    const setting = requiredId ? 'analyticsFiltersProjectId: "' + requiredId + '"' : 'analyticsFiltersProjectId с ID подготовленного проекта';
+    return 'Проверка фильтров не началась. Тестовые данные подготовлены ' + project + '.' + actual +
+      ' В config.js рабочей копии cloud-e2e укажите ' + setting + ' и повторите запуск.';
+  }
   if (/One aggregate per number/i.test(message)) {
     if (/^\d+$/.test(expected) && /^\d+$/.test(received)) {
       return 'В распределении звонков номера повторяются. На ' + expected + ' строк приходится ' + received + ' уникальных номеров. Ожидалась одна строка на номер.';
@@ -32,11 +42,14 @@ function explainFailure(message) {
   if (/ECONNREFUSED|ERR_CONNECTION_REFUSED/.test(message)) return 'Сервер отклонил подключение. Тест не смог продолжить работу.';
   if (/executable doesn't exist/i.test(message)) return 'Playwright не нашёл установленный браузер для этой версии тестов.';
   if (/strict mode violation/i.test(message)) return 'Вместо одного элемента на странице найдено несколько. Тест не смог однозначно выбрать элемент.';
-  if (expected && received) return 'Проверка не прошла. Ожидалось: ' + expected + '. Получено: ' + received + '.';
+  if (expected && received) {
+    const context = heading && !/^(?:expect\s*\(|Expected\b|Received\b)/i.test(heading)
+      ? 'Условие теста: «' + heading + '». ' : '';
+    return context + 'Ожидалось: ' + expected + '. Получено: ' + received + '.';
+  }
   const duration = message.match(/(?:timeout(?: of)?|timed out(?: after)?)\s+(\d+)\s*ms/i)?.[1];
   if (/timeout|timed out/i.test(message)) return 'Истекло время ожидания' + (duration ? ' (' + Number(duration) / 1000 + ' с)' : '') + '. Проверяемое действие не завершилось вовремя.';
-  const first = message.trim().split(/\r?\n/)[0].replace(/^(?:Error|Ошибка):\s*/, '');
-  if (/[а-яё]/i.test(first)) return first;
+  if (/[а-яё]/i.test(heading)) return heading;
   if (/expect\(/.test(message)) return 'Фактический результат не соответствует условию проверки. Точное условие приведено в технических подробностях.';
   return 'Playwright сообщил об ошибке. Точное сообщение и место сбоя приведены в технических подробностях.';
 }
