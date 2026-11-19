@@ -186,10 +186,15 @@ function listRow(name, source) {
   const code = document.createElement('code');
   code.textContent = name;
   row.append(code);
-  function action(text, handler) {
+  function action(text, handler, iconId) {
     const button = document.createElement('button');
     button.type = 'button';
-    button.textContent = text;
+    if (source === 'recent' && iconId) {
+      button.append(document.getElementById(iconId).content.cloneNode(true));
+      button.title = text;
+    } else {
+      button.textContent = text;
+    }
     button.setAttribute('aria-label', text + ' ' + name);
     button.onclick = handler;
     row.append(button);
@@ -207,16 +212,16 @@ function listRow(name, source) {
       selection.addRange(range);
       listStatus.textContent = 'Название выделено для ручного копирования.';
     }
-  });
+  }, 'fg-copy-icon');
   const input = form.elements.fg || form.elements.groups;
-  if (input) action('В команду', () => {
+  if (source !== 'recent' && input) action('В команду', () => {
     input.value = input.name === 'groups'
       ? [...new Set([...usedGroups(), name])].join(',') : name;
     input.dispatchEvent(new Event('input', {bubbles: true}));
     input.focus();
   });
   if (source === 'saved') action('Убрать', () => editSaved(name, true));
-  else if (!saved.includes(name)) action('Сохранить', () => editSaved(name));
+  else if (!saved.includes(name)) action('Сохранить', () => editSaved(name), 'fg-save-icon');
   return row;
 }
 function renderLibraries() {
