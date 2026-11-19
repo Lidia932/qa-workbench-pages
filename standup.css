@@ -59,6 +59,7 @@ main.wrap { padding-block: 1.1rem 2rem; }
 .day > legend { margin-bottom: .35rem; }
 .review-item label { display: flex; gap: .6rem; align-items: center; justify-content: space-between; }
 .review-item select { width: auto; min-width: 8rem; }
+.review-item select:has(option[value=""]:checked) { background-color: #fff4cf; border-color: #ac7928; color: #624312; }
 .review-item input { flex: 1; min-width: 0; }
 .manual-task { display: grid; grid-template-columns: 1fr auto; gap: .3rem; margin: .4rem 0; }
 .manual-task .url { grid-row: 2; }
