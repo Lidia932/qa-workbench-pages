@@ -24,6 +24,7 @@ a:hover { background: #eaf3ef; }
 a:hover strong { text-decoration: underline; }
 #catalog section { --accent: #13604c; --tint: #e8f4ed; border-top: 2px solid var(--accent); }
 #catalog [data-group="Тестирование"] { --accent: #255b93; --tint: #ebf3fc; }
+#catalog [data-group="Автотесты"] { --accent: #8d395b; --tint: #fdeff4; }
 #catalog [data-group="Релиз"] { --accent: #92501d; --tint: #fff2df; }
 #catalog [data-group="Расширения"] { --accent: #674491; --tint: #f3edfb; }
 #catalog section h2 { color: var(--accent); background: var(--tint); border-left: 4px solid var(--accent); padding: .35rem .7rem; align-self: start; justify-self: start; }

@@ -20,7 +20,11 @@ function render() {
     }
     const link = element('a', '');
     link.href = url;
-    link.target = '_blank';
+    if (url.startsWith('./downloads/')) {
+      link.download = '';
+    } else {
+      link.target = '_blank';
+    }
     link.rel = 'noopener noreferrer';
     link.append(element('strong', name), element('span', description));
     groups.get(group).append(link);
