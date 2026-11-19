@@ -19,10 +19,10 @@
 .library li { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .45rem; border-top: 1px solid #dbe4df; padding: .45rem 0; }
 .library code { flex: 1 1 100%; overflow-wrap: anywhere; }
 .library li button { font-size: .84rem; padding: .2rem .5rem; }
-#recent-list li { flex-wrap: nowrap; gap: .25rem; }
-#recent-list code { min-width: 0; flex: 1; }
-#recent-list button { display: grid; place-items: center; flex: 0 0 1.75rem; height: 1.75rem; padding: 0; color: var(--accent); }
-#recent-list svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linejoin: round; }
+.fg-icon-list li { flex-wrap: nowrap; gap: .25rem; }
+.fg-icon-list code { min-width: 0; flex: 1; }
+.fg-icon-list li button { display: grid; place-items: center; flex: 0 0 1.75rem; height: 1.75rem; padding: 0; color: var(--accent); }
+.fg-icon-list svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linejoin: round; }
 .library p { color: #50635e; margin: 0; }
 .library form { margin: .5rem 0 .7rem; }
 .account-groups { margin-top: 1rem; background: #f3f8fe; border-top-color: #315e93; }

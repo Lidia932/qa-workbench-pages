@@ -189,7 +189,7 @@ function listRow(name, source) {
   function action(text, handler, iconId) {
     const button = document.createElement('button');
     button.type = 'button';
-    if (source === 'recent' && iconId) {
+    if (source !== 'account' && iconId) {
       button.append(document.getElementById(iconId).content.cloneNode(true));
       button.title = text;
     } else {
@@ -214,13 +214,13 @@ function listRow(name, source) {
     }
   }, 'fg-copy-icon');
   const input = form.elements.fg || form.elements.groups;
-  if (source !== 'recent' && input) action('В команду', () => {
+  if (source === 'account' && input) action('В команду', () => {
     input.value = input.name === 'groups'
       ? [...new Set([...usedGroups(), name])].join(',') : name;
     input.dispatchEvent(new Event('input', {bubbles: true}));
     input.focus();
   });
-  if (source === 'saved') action('Убрать', () => editSaved(name, true));
+  if (source === 'saved') action('Удалить из сохранённых', () => editSaved(name, true), 'fg-remove-icon');
   else if (!saved.includes(name)) action('Сохранить', () => editSaved(name), 'fg-save-icon');
   return row;
 }
