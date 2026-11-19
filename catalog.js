@@ -1,0 +1,31 @@
+const catalog = document.querySelector('#catalog');
+const search = document.querySelector('#search');
+
+function element(tag, text) {
+  const node = document.createElement(tag);
+  node.textContent = text;
+  return node;
+}
+
+function render() {
+  const query = search.value.trim().toLocaleLowerCase('ru');
+  const groups = new Map();
+  for (const [group, name, description, url] of tools) {
+    if (![group, name, description].join(' ').toLocaleLowerCase('ru').includes(query)) continue;
+    if (!groups.has(group)) {
+      const section = document.createElement('section');
+      section.append(element('h2', group));
+      groups.set(group, section);
+    }
+    const link = element('a', '');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.append(element('strong', name), element('span', description));
+    groups.get(group).append(link);
+  }
+  catalog.replaceChildren(...groups.values());
+  document.querySelector('#empty').hidden = groups.size !== 0;
+}
+search.addEventListener('input', render);
+render();

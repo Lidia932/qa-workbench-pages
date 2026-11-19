@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Roistat QA · Рабочие инструменты</title>
+<link rel="stylesheet" href="style.css">
+<header><div class="wrap brand"><span class="logo" aria-hidden="true">QA</span> Roistat QA</div></header>
+<main class="wrap">
+  <h1>Рабочие инструменты</h1>
+  <div class="quick-access">
+  <aside aria-labelledby="fav-title">
+    <div class="fav-head"><h2 id="fav-title">Избранное</h2><button id="add" type="button" aria-expanded="false" aria-controls="editor">+ Добавить вкладку</button></div>
+    <form id="editor" hidden>
+      <label>Ссылка<input name="url" type="url" required placeholder="https://"></label>
+      <label>Название задачи<input name="title" placeholder="Необязательно" maxlength="200"></label>
+      <button>Сохранить</button><button type="button" id="cancel">Отмена</button>
+    </form>
+    <ul id="favorites"></ul>
+    <p id="no-favorites">Здесь будут ссылки на временные задачи.</p>
+    <p id="message" role="status"></p>
+  </aside>
+  <img class="sticker" src="sticker.webp" alt="У нас тут не демократия">
+  </div>
+  <label for="search">Поиск по каталогу</label>
+  <input id="search" type="search" placeholder="Название или задача" autocomplete="off">
+  <div id="catalog"></div>
+  <p id="empty" role="status" hidden>По этому запросу инструментов нет.</p>
+</main>
+<script src="tools.js"></script>
+<script src="catalog.js"></script>
+<script src="favorites.js"></script>
+</html>
