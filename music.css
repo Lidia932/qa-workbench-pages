@@ -1,0 +1,15 @@
+.music-controls { display: flex; align-items: center; gap: .4rem; }
+.music-toggle { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; padding: 0; border-radius: 50%; }
+.music-toggle svg { width: 1.2rem; height: 1.2rem; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.music-toggle[aria-pressed="false"] .waves, .music-toggle[aria-pressed="true"] .mute { display: none; }
+.music-controls input[type="range"] { width: 4rem; height: 1.5rem; cursor: pointer; margin: 0; padding: 0; accent-color: #217b64; }
+[data-theme="dark"] .music-controls input[type="range"] { accent-color: var(--green); }
+.music-notice { position: absolute; z-index: 5; right: 0; top: 100%; max-width: 18rem; width: max-content; padding: .5rem .75rem; border: 1px solid #adbbb5; border-radius: .4rem; background: Canvas; color: CanvasText; font-size: .85rem; font-weight: normal; }
+.music-notice:empty { display: none; }
+.brand { position: relative; }
+@media (max-width: 520px) {
+  .brand { gap: .4rem; }
+  .music-controls { flex-direction: column; gap: 0; }
+  .music-toggle { width: 2.25rem; height: 2.25rem; }
+  .music-controls input[type="range"] { width: 3rem; height: 1.15rem; }
+}
