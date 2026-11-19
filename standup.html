@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Стендап · Roistat QA</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="standup.css?v=e2e1">
-  <script src="standup.js?v=e2e1" defer></script>
+  <link rel="stylesheet" href="standup.css?v=edit1">
+  <script src="standup.js?v=edit1" defer></script>
   <script src="standup-history.js?v=e2e1" defer></script>
   <script src="standup-team.js?v=e2e1" defer></script>
 </head>
@@ -70,8 +70,12 @@
         </fieldset>
       </div>
       <div class="result">
-        <h2>Сообщение для чата</h2>
+        <div class="message-head">
+          <h2>Сообщение для чата</h2>
+          <button id="edit-message" type="button" aria-expanded="false" aria-controls="message-text">Редактировать</button>
+        </div>
         <div id="preview"></div>
+        <textarea id="message-text" aria-label="Сообщение для чата" rows="12" hidden></textarea>
         <button id="copy">Скопировать сообщение</button>
         <button id="save-plan">Сохранить план</button>
         <span id="status" role="status"></span>

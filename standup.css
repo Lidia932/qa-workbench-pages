@@ -46,6 +46,10 @@ textarea[hidden] { display: none; }
 .actions { margin: .65rem 0 1rem; }
 .result { position: sticky; top: 1rem; }
 .result h2 { margin: 0 0 .7rem; }
+.message-head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .35rem; margin-bottom: .6rem; }
+.message-head h2 { margin: 0; }
+#edit-message { font-size: .875rem; }
+#message-text { margin: 0; line-height: 1.5; }
 #preview { background: #105363; color: #eefafa; padding: 1rem 1.2rem; border-radius: 6px; overflow-wrap: anywhere; }
 #preview ul { margin: .3rem 0 1rem; padding-left: 1.35rem; }
 #preview ul:last-child { margin-bottom: 0; }

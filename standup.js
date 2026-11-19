@@ -7,6 +7,10 @@ const people = new Map([
 const plans = document.querySelector('#plans');
 const preview = document.querySelector('#preview');
 const statusLine = document.querySelector('#status');
+const messageText = document.querySelector('#message-text');
+const editMessage = document.querySelector('#edit-message');
+let generatedMessage = '';
+let manuallyEdited = false;
 const workActions = {start:'Начнем работу по', continue:'Продолжим работу по'};
 const e2eOutcomes = {yes:'Провели E2E-тест по', no:'Не провели E2E-тест по', review:'E2E-тест на ревью:'};
 
@@ -278,8 +282,27 @@ function render() {
     preview.append(heading, list);
     blocks.push('**' + name + ':**\n' + rows.map(parts => '* ' + parts.map(markdown).join('')).join('\n'));
   }
-  return blocks.join('\n\n');
+  generatedMessage = blocks.join('\n\n');
+  if (!messageText.hidden && !manuallyEdited) messageText.value = generatedMessage;
+  return messageText.hidden ? generatedMessage : messageText.value;
 }
+
+editMessage.onclick = () => {
+  if (!messageText.hidden && manuallyEdited && !window.confirm('Заменить ваши правки текущим текстом из формы?')) return;
+  const editing = messageText.hidden;
+  manuallyEdited = false;
+  messageText.hidden = !editing;
+  preview.hidden = editing;
+  editMessage.textContent = editing ? 'Вернуться к тексту из формы' : 'Редактировать';
+  editMessage.setAttribute('aria-expanded', String(editing));
+  render();
+  if (editing) messageText.focus();
+};
+messageText.oninput = () => {
+  manuallyEdited = messageText.value !== generatedMessage;
+  statusLine.textContent = '';
+  document.querySelector('#manual-copy').hidden = true;
+};
 
 document.querySelector('#add-task').onclick = () => addPlan('task');
 document.querySelector('#add-e2e').onclick = () => addPlan('e2e');
@@ -310,6 +333,11 @@ for (const container of document.querySelectorAll('#accepted-tasks, #deferred-ta
 document.querySelector('#fields').addEventListener('input', render);
 document.querySelector('#copy').onclick = async () => {
   const text = render();
+  if (!text.trim()) {
+    statusLine.textContent = 'Сообщение пустое.';
+    messageText.focus();
+    return;
+  }
   if (!validStandup()) return;
   try {
     await navigator.clipboard.writeText(text);
