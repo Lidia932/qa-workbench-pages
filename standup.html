@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Стендап · Roistat QA</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="standup.css?v=20261119-reset">
-  <script src="standup.js?v=20261119-reset" defer></script>
-  <script src="standup-history.js?v=20261119-reset" defer></script>
-  <script src="standup-team.js?v=20261119-preview" defer></script>
+  <link rel="stylesheet" href="standup.css?v=e2e1">
+  <script src="standup.js?v=e2e1" defer></script>
+  <script src="standup-history.js?v=e2e1" defer></script>
+  <script src="standup-team.js?v=e2e1" defer></script>
 </head>
 <body>
   <header><div class="wrap brand"><span class="logo">QA</span> Roistat QA <a href="./index.html">Каталог</a></div></header>
@@ -49,6 +49,7 @@
             <label><input id="deferred" type="checkbox">Не провели приёмку</label>
             <div id="deferred-tasks" hidden></div>
           </div>
+          <div id="past-e2e"><button type="button" class="add-manual" id="add-past-e2e">+ E2E-тест</button></div>
           </div>
           <details><summary>Другие итоги</summary>
             <textarea id="yesterday" aria-label="Другие итоги" rows="2"></textarea>
@@ -61,7 +62,7 @@
             <label><input type="radio" name="today-count" value="2">2 релиза</label>
           </fieldset>
           <div id="plans"></div>
-          <div class="actions"><button id="add-task">+ Приёмка</button></div>
+          <div class="actions"><button id="add-task">+ Приёмка</button><button id="add-e2e">+ E2E-тест</button></div>
           <details><summary>Другие планы</summary><textarea id="other" aria-label="Другие планы" rows="2"></textarea></details>
         </fieldset>
         <fieldset class="day blockers"><legend>Проблемы <button class="section-reset" id="reset-problems" type="button" aria-label="Сбросить блок Проблемы">Сбросить</button></legend>

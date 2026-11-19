@@ -7,15 +7,39 @@ const people = new Map([
 const plans = document.querySelector('#plans');
 const preview = document.querySelector('#preview');
 const statusLine = document.querySelector('#status');
+const workActions = {start:'Начнем работу по', continue:'Продолжим работу по'};
+const e2eOutcomes = {yes:'Провели E2E-тест по', no:'Не провели E2E-тест по', review:'E2E-тест на ревью:'};
+
+function e2eStatus() {
+  const select = document.createElement('select');
+  select.setAttribute('aria-label','Итог E2E-теста');
+  for (const [value, label] of [['','Выберите итог'],['yes','Провели'],['no','Не провели'],['review','На ревью']]) select.add(new Option(label,value));
+  return select;
+}
 
 function addPlan(kind, focus = true) {
-  const row = document.querySelector('#' + kind + '-template').content.firstElementChild.cloneNode(true);
+  const row = document.querySelector(kind === 'release' ? '#release-template' : '#task-template').content.firstElementChild.cloneNode(true);
+  if (kind === 'e2e') {
+    row.classList.add('e2e');
+    row.querySelector('strong').textContent = 'E2E-тест';
+    row.querySelector('.people legend').textContent = 'Исполнители';
+    const remove = row.querySelector('.remove');
+    remove.title = 'Удалить E2E-тест';
+    remove.setAttribute('aria-label', remove.title);
+    const label = document.createElement('label');
+    label.append('План работы');
+    const action = document.createElement('select');
+    action.className = 'work-action';
+    for (const [value,text] of Object.entries(workActions)) action.add(new Option(text,value));
+    label.append(action);
+    row.querySelector('.plan-head').after(label);
+  }
   const lead = row.querySelector('.lead');
   if (lead) {
     row.dataset.number = plans.querySelectorAll('.release').length + 1;
     row.querySelector('strong').textContent = 'Релиз ' + row.dataset.number;
   }
-  populatePeople(row);
+  populatePeople(row, new Map(), lead ? [...people.keys()] : []);
   if (!lead) row.querySelector('.remove').onclick = () => {
     row.remove();
     document.querySelector('#add-' + kind).focus();
@@ -30,11 +54,11 @@ function selectedPeople(row) {
   return Array.from(row.querySelectorAll('.people input:checked'), el => el.value);
 }
 
-function addAcceptancePeople(row, initial = []) {
+function addAcceptancePeople(row, initial = [], caption = 'Ведёт приёмку') {
   const field = document.createElement('fieldset');
   field.className = 'people';
   const legend = document.createElement('legend');
-  legend.textContent = 'Ведёт приёмку';
+  legend.textContent = caption;
   field.append(legend);
   row.append(field);
   populatePeople(row, new Map(), initial);
@@ -73,11 +97,11 @@ function appendPeople(parts, logins) {
   });
 }
 
-function acceptanceParts(phrase, title, href, row) {
+function taskParts(phrase, title, href, row, e2e = false) {
   const parts = [phrase + ' ', href ? {title, href} : title];
   const qa = selectedPeople(row);
   if (qa.length) {
-    parts.push(' QA ');
+    parts.push(e2e ? ' ' : ' QA ');
     appendPeople(parts, qa);
   }
   return parts;
@@ -112,7 +136,7 @@ function checkTaskLink(input, active = true) {
 }
 let linkErrorId = 0;
 
-function manualTask(container) {
+function manualTask(container, e2e = false) {
   const row = document.createElement('div');
   row.className = 'manual-task';
   for (const [name, caption] of [['task-name','Название задачи'],['url','Ссылка на задачу']]) {
@@ -129,14 +153,15 @@ function manualTask(container) {
   remove.textContent = '×';
   remove.setAttribute('aria-label','Убрать задачу');
   remove.onclick = () => {
-    if (container.querySelectorAll('.manual-task').length === 1) {
+    if (!e2e && container.querySelectorAll('.manual-task').length === 1) {
       document.getElementById(container.id.split('-')[0]).checked = false;
     }
     row.remove();
     render();
   };
   row.append(remove);
-  addAcceptancePeople(row);
+  if (e2e) row.prepend(e2eStatus());
+  addAcceptancePeople(row, [], e2e ? 'Исполнители' : 'Ведёт приёмку');
   container.insertBefore(row, container.querySelector('.add-manual'));
   return row;
 }
@@ -164,8 +189,17 @@ function yesterday() {
       const title = row.querySelector('.task-name').value.trim();
       row.querySelector('.task-name').setCustomValidity(title ? '' : 'Введите название задачи');
       const href = checkTaskLink(row.querySelector('.url'));
-      if (title) rows.push(acceptanceParts(phrase, title, href, row));
+      if (title) rows.push(taskParts(phrase, title, href, row));
     }
+  }
+  for (const row of document.querySelectorAll('#past-e2e .manual-task')) {
+    const phase = row.querySelector('select').value;
+    const title = row.querySelector('.task-name');
+    const url = row.querySelector('.url');
+    title.required = url.required = Boolean(phase);
+    title.setCustomValidity(phase && !title.value.trim() ? 'Введите название задачи' : '');
+    const href = checkTaskLink(url, Boolean(phase));
+    if (phase && title.value.trim()) rows.push(taskParts(e2eOutcomes[phase], title.value.trim(), href, row, true));
   }
   return rows.concat(lines('#yesterday'));
 }
@@ -193,7 +227,8 @@ function today() {
       titleInput.setCustomValidity(!title ? 'Введите название задачи' : '');
       const href = checkTaskLink(url);
       if (!title) continue;
-      parts.push(...acceptanceParts('Проведем приемку', title, href, row));
+      const action = row.querySelector('.work-action');
+      parts.push(...taskParts(action ? workActions[action.value] : 'Проведем приемку', title, href, row, Boolean(action)));
     }
     entries.push(parts);
   }
@@ -247,10 +282,15 @@ function render() {
 }
 
 document.querySelector('#add-task').onclick = () => addPlan('task');
+document.querySelector('#add-e2e').onclick = () => addPlan('e2e');
+document.querySelector('#add-past-e2e').onclick = () => {
+  manualTask(document.querySelector('#past-e2e'), true).querySelector('.task-name').focus();
+  render();
+};
 document.querySelector('#reset-today').onclick = () => {
   plans.querySelectorAll('.task').forEach(row => row.remove());
   for (const lead of plans.querySelectorAll('.lead')) lead.value = '';
-  for (const input of plans.querySelectorAll('input:checked')) input.checked = false;
+  for (const input of plans.querySelectorAll('.release .people input')) input.checked = true;
   document.querySelector('[name=today-count][value="1"]').checked = true;
   document.querySelector('#other').value = '';
   document.querySelector('.current details').open = false;
@@ -283,5 +323,3 @@ document.querySelector('#copy').onclick = async () => {
     statusLine.textContent = 'Выделенный текст можно скопировать вручную.';
   }
 };
-addPlan('release', false);
-addPlan('release', false);

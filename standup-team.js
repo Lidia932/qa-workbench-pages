@@ -4,15 +4,26 @@ const teamRows = document.querySelector('#team-rows');
 const teamStatus = document.querySelector('#team-status');
 
 function setTeam(entries, rename = new Map()) {
+  const previousLogins = new Set(Array.from(people.keys(), login => rename.get(login) ?? login));
   people.clear();
   for (const [login,name] of entries) people.set(login,name);
-  for (const field of document.querySelectorAll('#fields .people')) populatePeople(field.parentElement,rename);
+  for (const field of document.querySelectorAll('#fields .people')) {
+    const row = field.parentElement;
+    populatePeople(row,rename);
+    if (row.classList.contains('release')) {
+      for (const check of field.querySelectorAll('input')) {
+        if (!previousLogins.has(check.value)) check.checked = true;
+      }
+    }
+  }
   render();
 }
 try {
   const saved = JSON.parse(localStorage.getItem(teamKey));
   if (Array.isArray(saved) && saved.every(item => Array.isArray(item) && item.length === 2 && item.every(v => typeof v === 'string'))) setTeam(saved);
 } catch { /* Defaults remain available when storage is disabled. */ }
+addPlan('release', false);
+addPlan('release', false);
 
 function teamRow(login = '', name = '') {
   const row = document.createElement('fieldset');

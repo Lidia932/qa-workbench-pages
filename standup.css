@@ -64,6 +64,10 @@ main.wrap { padding-block: 1.1rem 2rem; }
 .review-item input { flex: 1; min-width: 0; }
 .manual-task { display: grid; grid-template-columns: 1fr auto; gap: .3rem; margin: .4rem 0; }
 .manual-task .url { grid-row: 2; }
+#past-e2e .manual-task select { grid-column: 1; grid-row: 1; }
+#past-e2e .task-name { grid-column: 1; grid-row: 2; }
+#past-e2e .url { grid-column: 1; grid-row: 3; }
+.e2e .plan-head { color: #255b83; border-color: #255b83; background: #edf5fc; }
 .manual-task .people { grid-column: 1 / -1; }
 .review-item .people label { display: inline-flex; }
 .review-item .people input { flex: none; }

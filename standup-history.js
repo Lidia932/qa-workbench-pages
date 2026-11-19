@@ -18,7 +18,12 @@ function savePlan() {
     if (row.dataset.number) items.push({number: row.dataset.number});
     else {
       const title = row.querySelector('.task-name').value.trim();
-      if (title) items.push({title, href:row.querySelector('.url').value.trim(), qa:selectedPeople(row)});
+      if (title) {
+        const task = {title, href:row.querySelector('.url').value.trim(), qa:selectedPeople(row)};
+        const action = row.querySelector('.work-action');
+        if (action) Object.assign(task, {kind:'e2e', action:action.value});
+        items.push(task);
+      }
     }
   }
   try {
@@ -48,9 +53,12 @@ function showReview(items, title) {
     const row = document.createElement('div');
     row.className = 'review-item';
     const label = document.createElement('label');
-    label.append(item.number ? 'Релиз ' + item.number : 'Приёмка · ' + item.title);
-    const select = document.createElement('select');
-    for (const [value, text] of [['','Выберите итог'],['yes','Провели'],['no','Не провели']]) select.add(new Option(text,value));
+    const e2e = item.kind === 'e2e';
+    label.append(item.number ? 'Релиз ' + item.number : (e2e ? 'E2E · ' + workActions[item.action] + ' ' : 'Приёмка · ') + item.title);
+    const select = e2e ? e2eStatus() : document.createElement('select');
+    if (!e2e) {
+      for (const [value, text] of [['','Выберите итог'],['yes','Провели'],['no','Не провели']]) select.add(new Option(text,value));
+    }
     label.append(select);
     row.append(label);
     if (!item.number && !taskHref(item.href)) {
@@ -63,7 +71,7 @@ function showReview(items, title) {
       field.append(input);
       row.append(field);
     }
-    if (!item.number) addAcceptancePeople(row, item.qa || []);
+    if (!item.number) addAcceptancePeople(row, item.qa || [], e2e ? 'Исполнители' : 'Ведёт приёмку');
     reviewItems.append(row);
   }
   document.querySelector('#review-title').textContent = title;
@@ -88,7 +96,8 @@ function reviewedRows() {
     const verb = value === 'yes' ? 'Провели' : 'Не провели';
     if (item.number) rows.push([verb + ' релиз №' + item.number]);
     else {
-      rows.push(acceptanceParts(verb + ' приемку', item.title, href, row));
+      const e2e = item.kind === 'e2e';
+      rows.push(taskParts(e2e ? e2eOutcomes[value] : verb + ' приемку', item.title, href, row, e2e));
     }
   });
   return rows;
@@ -110,11 +119,14 @@ function parseToday(body) {
     }
     const release = line.match(/^(?:провед[её]м\s+)?(\d+)(?:-й)?\s+релиз(?:\s|$|[.,-])/i);
     if (release) { items.push({number:release[1]}); continue; }
+    const work = line.match(/^(начн[её]м|продолжим)\s+работу\s+по\s+(.+)$/i);
     const acceptance = line.match(/(?:^|\s)при[её]мк[а-яё]*[\s:–—-]*(.*)$/i);
     const taskLink = /https?:\/\/[^\s/)]+\/tasks\/task\/[^\s)]+/i.test(line);
-    if (!acceptance && !taskLink) {skipped.push(line);continue;}
-    const description = acceptance?.[1] || line;
-    const assignment = description.match(/(?:^|\s+)QA\s*:?\s*((?:@[a-z0-9][a-z0-9._-]*[\s,;]*)+)$/i);
+    if (!work && !acceptance && !taskLink) {skipped.push(line);continue;}
+    const description = work?.[2] || acceptance?.[1] || line;
+    const assignment = work
+      ? description.match(/\s+(?:QA\s*:?\s*)?((?:@[a-z0-9][a-z0-9._-]*[\s,;]*)+)$/i)
+      : description.match(/(?:^|\s+)QA\s*:?\s*((?:@[a-z0-9][a-z0-9._-]*[\s,;]*)+)$/i);
     const qa = Array.from((assignment?.[1] || '').matchAll(/@([a-z0-9][a-z0-9._-]*)/gi),
       match => match[1].replace(/\.+$/,'').toLowerCase());
     const task = (assignment ? description.slice(0,assignment.index) : description).replace(/\s+QA\s*:?\s*—?$/i,'').trim();
@@ -122,13 +134,15 @@ function parseToday(body) {
     const rawUrl = task.match(/https?:\/\/[^\s<>]+/i)?.[0];
     const href = taskHref(link?.[2] || rawUrl);
     const title = link?.[1] || (rawUrl ? task.replace(rawUrl,'').trim() : task) || rawUrl || 'Без названия';
-    items.push({title,href,qa});
+    const item = {title,href,qa};
+    if (work) Object.assign(item,{kind:'e2e', action:/^нач/i.test(work[1]) ? 'start' : 'continue'});
+    items.push(item);
   }
   return {items,skipped};
 }
 function importBody(body, title, status) {
   const {items,skipped} = parseToday(body);
-  if (!items.length) {status.textContent = 'В разделе «Сегодня» не найдены релизы или приёмки. ' + skipped.join(' · ');return;}
+  if (!items.length) {status.textContent = 'В разделе «Сегодня» не найдены релизы, приёмки или E2E-тесты. ' + skipped.join(' · ');return;}
   showReview(items, title);
   document.querySelector('#skipped-lines').textContent = skipped.length ? 'Не распознаны строки: ' + skipped.join(' · ') : '';
   status.textContent = 'Загружено пунктов: ' + items.length;
@@ -147,7 +161,9 @@ loadPost.addEventListener('qa-standup-result', event => {
   importBody(result.today, 'План из Platrum', postStatus);
 });
 document.querySelector('#parse-chat').onclick = () => {
-  const text = document.querySelector('#chat-text').value.replace(/^[ \t#*_]*(Сегодня|Проблемы|Вчера)\s*:?[ \t*_]*$/gim, '$1:');
+  const pasted = document.querySelector('#chat-text').value;
+  const message = pasted.includes('\\*\\*Сегодня:') ? pasted.replace(/\\([*():_])/g,'$1').replace(/\\[ \t]*$/gm,'') : pasted;
+  const text = message.replace(/^[ \t#*_]*(Сегодня|Проблемы|Вчера)\s*:?[ \t*_]*$/gim, '$1:');
   const body = text.match(/^Сегодня:\s*\n([\s\S]*?)(?=^(?:Проблемы|Вчера):|(?![\s\S]))/im)?.[1];
   const status = document.querySelector('#parse-status');
   if (!body) {status.textContent = 'Не найден раздел «Сегодня».';return;}
