@@ -20,6 +20,7 @@
   let request = null;
   let ownsPlayer = false;
   let playing = false;
+  let waitingForGesture = false;
   let lastCheckpoint = 0;
 
   function read(name) {
@@ -31,8 +32,10 @@
   }
   function showPlaying(value) {
     playing = value;
-    button.setAttribute('aria-pressed', String(value));
-    button.title = value ? 'Выключить музыку' : 'Включить музыку';
+    const enabled = read('enabled') === 'yes';
+    button.setAttribute('aria-pressed', String(enabled));
+    button.title = enabled ? 'Выключить музыку' : 'Включить музыку';
+    if (value) waitingForGesture = false;
     if (value) notice.textContent = '';
   }
   function announce(value) {
@@ -53,6 +56,7 @@
     }
   }
   function stop() {
+    waitingForGesture = false;
     if (ownsPlayer) {
       savePosition();
       audio.pause();
@@ -88,10 +92,11 @@
       }
     }).catch(error => {
       if (signal.aborted) return;
+      waitingForGesture = error.name === 'NotAllowedError';
       announce(false);
-      notice.textContent = error.name === 'NotAllowedError'
-        ? 'Нажмите на динамик, чтобы продолжить музыку.'
-        : 'Не удалось воспроизвести музыку. Нажмите на динамик, чтобы повторить.';
+      notice.textContent = waitingForGesture
+        ? 'Музыка продолжится при первом действии на странице.'
+        : 'Не удалось воспроизвести музыку. Выключите и снова включите её.';
     }).finally(() => { if (request === controller) request = null; });
   }
   channel.onmessage = ({data}) => {
@@ -103,13 +108,20 @@
     }
   };
   button.onclick = () => {
-    if (playing) {
+    if (read('enabled') === 'yes') {
       if (write('enabled', 'no')) stop();
     } else if (write('enabled', 'yes')) {
       notice.textContent = '';
+      showPlaying(false);
       join();
     }
   };
+  function resumeAfterGesture(event) {
+    if (!waitingForGesture || !event.isTrusted || button.contains(event.target) || !navigator.userActivation.isActive) return;
+    join();
+  }
+  document.addEventListener('click', resumeAfterGesture, {capture: true});
+  document.addEventListener('keydown', resumeAfterGesture, {capture: true});
   volume.oninput = () => {
     if (write('volume', volume.value)) updateVolume();
   };
@@ -117,10 +129,12 @@
     if (key === prefix + 'volume' || key === null) updateVolume();
     if (key === prefix + 'enabled' || key === null) {
       if (read('enabled') !== 'yes') stop();
+      else showPlaying(playing);
     }
   });
   window.addEventListener('pagehide', stop);
   window.addEventListener('pageshow', () => {
+    showPlaying(playing);
     updateVolume();
     channel.postMessage('status');
     join();

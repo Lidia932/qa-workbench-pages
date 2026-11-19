@@ -5,6 +5,7 @@
 .music-controls input[type="range"] { width: 4rem; height: 1.5rem; cursor: pointer; margin: 0; padding: 0; accent-color: #217b64; }
 [data-theme="dark"] .music-controls input[type="range"] { accent-color: var(--green); }
 .music-notice { position: absolute; z-index: 5; right: 0; top: 100%; max-width: 18rem; width: max-content; padding: .5rem .75rem; border: 1px solid #adbbb5; border-radius: .4rem; background: Canvas; color: CanvasText; font-size: .85rem; font-weight: normal; }
+.music-notice { pointer-events: none; }
 .music-notice:empty { display: none; }
 .brand { position: relative; }
 @media (max-width: 520px) {
