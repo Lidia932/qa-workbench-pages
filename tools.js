@@ -6,6 +6,6 @@ const tools = [
   ['Релиз', 'Таблица релизов', 'Открыть лист «Релизы» в Google Sheets', 'https://docs.google.com/spreadsheets/d/1dFTb3UgsfQG35SZR0v2xmL_ytcI_7LQiUWknua9CBuU/edit?gid=0#gid=0'],
   ['Релиз', 'Запрос на откат', 'Подготовить сообщение об откате PR', './revert.html'],
   ['Команда', 'Стендап', 'Собрать отчёт за день', './standup.html'],
-  ['Расширения', 'QA Merge Checker', 'Проверка PR релиза · Скачать ZIP · 1.0.1', './downloads/qa-merge-checker-1.0.1.zip'],
-  ['Расширения', 'Индикатор беты', 'Флаги и режим бета-сервера · Скачать ZIP · 1.0.0', './downloads/beta-cookie-indicator-1.0.0.zip']
+  ['Расширения', 'QA Merge Checker', 'Проверка PR релиза · 1.0.1', './downloads/qa-merge-checker-1.0.1.zip'],
+  ['Расширения', 'Индикатор беты', 'Флаги и режим бета-сервера · 1.0.0', './downloads/beta-cookie-indicator-1.0.0.zip']
 ];

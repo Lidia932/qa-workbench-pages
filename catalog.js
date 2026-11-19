@@ -21,10 +21,19 @@ function render() {
     const link = element('a', '');
     link.href = url;
     if (url.startsWith('./downloads/')) {
+      const row = element('div', '');
+      row.className = 'extension-row';
+      const info = element('div', '');
+      info.append(element('strong', name), element('small', description));
+      link.className = 'download';
+      link.textContent = 'Скачать ZIP';
+      link.setAttribute('aria-label', 'Скачать ZIP: ' + name);
       link.download = '';
-    } else {
-      link.target = '_blank';
+      row.append(info, link);
+      groups.get(group).append(row);
+      continue;
     }
+    link.target = '_blank';
     link.rel = 'noopener noreferrer';
     link.append(element('strong', name), element('span', description));
     groups.get(group).append(link);

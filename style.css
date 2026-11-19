@@ -30,6 +30,11 @@ a:hover strong { text-decoration: underline; }
 #catalog section h2 { color: var(--accent); background: var(--tint); border-left: 4px solid var(--accent); padding: .35rem .7rem; align-self: start; justify-self: start; }
 #catalog section a:hover { background: var(--tint); }
 .install-guide { grid-column: 2; padding: .8rem .65rem; }
+.extension-row { grid-column: 2; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem; padding: .8rem .65rem; border-bottom: 1px solid #dbe4df; }
+.extension-row:first-of-type { grid-row: 1; }
+.extension-row small { display: block; color: #485c63; }
+#catalog .download { display: inline-block; background: #674491; color: white; font-weight: 600; border: 0; border-radius: 4px; padding: .48rem .85rem; }
+#catalog .download:hover { background: #513474; }
 .install-guide summary { color: var(--accent); cursor: pointer; font-weight: 600; }
 .install-guide li + li { margin-top: .4rem; }
 a span { font-size: .9rem; color: #485c63; }
