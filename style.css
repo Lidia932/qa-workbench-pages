@@ -27,6 +27,7 @@ a:hover strong { text-decoration: underline; }
 #catalog [data-group="Автотесты"] { --accent: #8d395b; --tint: #fdeff4; }
 #catalog [data-group="Релиз"] { --accent: #92501d; --tint: #fff2df; }
 #catalog [data-group="Расширения"] { --accent: #674491; --tint: #f3edfb; }
+#catalog [data-group="Фокус-группы"] { --accent: #166575; --tint: #e7f5f7; }
 #catalog section h2 { color: var(--accent); background: var(--tint); border-left: 4px solid var(--accent); padding: .35rem .7rem; align-self: start; justify-self: start; }
 #catalog section a:hover { background: var(--tint); }
 .install-guide { grid-column: 2; padding: .8rem .65rem; }

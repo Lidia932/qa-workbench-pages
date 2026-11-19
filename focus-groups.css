@@ -1,0 +1,18 @@
+.brand a { margin-left: auto; padding: .45rem; border: 0; }
+.groups { display: flex; flex-wrap: wrap; gap: .45rem; border: 0; padding: 0; margin: 0 0 1.25rem; }
+.groups legend { font-weight: 600; margin-bottom: .5rem; }
+.groups label { display: inline-flex; align-items: center; gap: .35rem; padding: .4rem .65rem; margin: 0; border: 1px solid #b8cdc7; border-radius: 4px; cursor: pointer; }
+.groups label:has(:checked) { background: #e7f5f7; border-color: #166575; color: #155661; }
+input[type=radio] { width: 1rem; height: 1rem; margin: 0; accent-color: #166575; }
+.workspace { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); align-items: start; gap: 1.25rem; }
+#builder, #arguments { display: grid; gap: .85rem; }
+#builder { margin: 0; padding: 1rem; border: 1px solid #cadbd4; border-left: 4px solid #166575; background: white; }
+#builder :is(select, input) { display: block; width: 100%; margin-top: .25rem; padding: .5rem .65rem; font: inherit; border: 1px solid #9eafa8; border-radius: 4px; color: inherit; background: white; }
+#builder [hidden] { display: none; }
+#builder small { display: block; color: #50635e; font-weight: 400; }
+.result h2, .result label { margin: 0 0 .5rem; font-size: 1rem; }
+#preview { display: block; width: 100%; padding: .85rem 1rem; border: 0; border-radius: 5px; background: #105363; color: white; font: 1rem/1.55 monospace; overflow-wrap: anywhere; resize: vertical; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem; margin: .85rem 0 .45rem; }
+.actions button { background: #155c50; color: white; }
+.actions a { display: inline-block; padding: .3rem; border: 0; }
+@media (max-width: 750px) { .workspace { grid-template-columns: 1fr; } }

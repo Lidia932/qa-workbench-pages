@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Команды ФГ · Roistat QA</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="focus-groups.css">
+  <script src="focus-groups.js" defer></script>
+</head>
+<body>
+  <header><div class="wrap brand"><span class="logo">QA</span> Roistat QA <a href="./index.html">Каталог</a></div></header>
+  <main class="wrap">
+    <h1>Команды фокус-групп</h1>
+    <fieldset class="groups">
+      <legend>Раздел</legend>
+      <label><input type="radio" name="group" value="account" checked>Аккаунт</label>
+      <label><input type="radio" name="group" value="market">Маркетплейс</label>
+      <label><input type="radio" name="group" value="all">Снять у всех пользователей</label>
+      <label><input type="radio" name="group" value="other">Прочее</label>
+    </fieldset>
+    <div class="workspace">
+      <form id="builder" autocomplete="off">
+        <label id="operation-label">Действие<select id="operation"></select></label>
+        <div id="arguments"></div>
+      </form>
+      <div class="result">
+        <h2><label for="preview">Команда для чата</label></h2>
+        <textarea id="preview" rows="4" readonly spellcheck="false"></textarea>
+        <div class="actions">
+          <button type="submit" form="builder">Скопировать команду</button>
+          <a href="https://roistat.chat.platrum.ru/c9d2f3fa6bb6d63bbd9f589250d36698/channels/tools-product" target="_blank" rel="noopener noreferrer">Открыть tools-product ↗</a>
+        </div>
+        <small id="status" role="status"></small>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
