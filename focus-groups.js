@@ -61,12 +61,12 @@ const drafts = new Map();
 const lastAction = new Map();
 let group;
 let current;
-const recentKey = 'roistat-qa.fg.recent.v1';
+const recentKey = 'roistat-qa.fg.recent-commands.v1';
 const accountKey = 'roistat-qa.fg.account.v1';
 const defaultField = document.querySelector('#default-account');
 const send = document.querySelector('#send-command');
 let sentCommand = '';
-let pendingGroups = null;
+let pendingCommand = null;
 
 function readLocal(key) {
   try { return localStorage.getItem(key); } catch { return null; }
@@ -83,7 +83,20 @@ function readNames(key) {
     return Array.isArray(value) ? value.filter(name => typeof name === 'string' && name && !/\s/.test(name)) : [];
   } catch { return []; }
 }
-let recent = readNames(recentKey).slice(0, 20);
+const commandIndex = new Map();
+for (const [section, items] of Object.entries(commands)) {
+  items.forEach(([, name, keys], index) => commandIndex.set(name, {section, index, keys}));
+}
+function readHistory() {
+  try {
+    const entries = JSON.parse(readLocal(recentKey));
+    if (!Array.isArray(entries)) return [];
+    return entries.filter(entry => Array.isArray(entry) &&
+      commandIndex.get(entry[0])?.keys.length === entry.length - 1 &&
+      entry.every(value => typeof value === 'string' && value.trim())).slice(0, 20);
+  } catch { return []; }
+}
+let recent = readHistory();
 let saved = readNames(savedKey);
 const lookupId = document.querySelector('#lookup-id');
 const lookupButton = document.querySelector('#lookup-button');
@@ -164,11 +177,40 @@ function usedGroups() {
   if (form.elements.groups) return form.elements.groups.value.split(',').map(name => name.trim()).filter(Boolean);
   return form.elements.fg ? [form.elements.fg.value.trim()] : [];
 }
-function remember(names) {
-  if (!names.length) return;
-  recent = [...new Set([...names, ...readNames(recentKey), ...recent])].slice(0, 20);
-  try { localStorage.setItem(recentKey, JSON.stringify(recent)); } catch { /* Keep suggestions for this tab. */ }
-  renderLibraries();
+function commandEntry() {
+  return [current[1], ...current[2].map(key => form.elements[key].value.trim())];
+}
+function remember(entry) {
+  const previous = readLocal(recentKey) === null ? recent : readHistory();
+  const serialized = JSON.stringify(entry);
+  recent = [entry, ...previous.filter(item => JSON.stringify(item) !== serialized)].slice(0, 20);
+  try { localStorage.setItem(recentKey, JSON.stringify(recent)); } catch { /* Keep history in this tab. */ }
+  renderHistory();
+}
+function repeatCommand([name, ...values]) {
+  const {section, index, keys} = commandIndex.get(name);
+  document.querySelector(`[name="group"][value="${section}"]`).checked = true;
+  lastAction.set(section, index);
+  drafts.set(section === 'other' ? name : section, new Map(keys.map((key, i) => [key, values[i]])));
+  showGroup();
+  (args.querySelector('input') || operation).focus();
+  status.textContent = 'Команда подставлена в форму.';
+}
+function renderHistory() {
+  document.querySelector('#recent-list').replaceChildren(...recent.map(entry => {
+    const row = document.createElement('li');
+    const code = document.createElement('code');
+    code.textContent = ['/erp', ...entry].join(' ');
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.title = 'Повторить команду в форме';
+    button.setAttribute('aria-label', button.title + ': ' + code.textContent);
+    button.append(document.querySelector('#command-repeat-icon').content.cloneNode(true));
+    button.onclick = () => repeatCommand(entry);
+    row.append(code, button);
+    return row;
+  }));
+  document.querySelector('#recent-empty').hidden = Boolean(recent.length);
 }
 
 function editSaved(name, remove = false) {
@@ -221,14 +263,12 @@ function listRow(name, source) {
     input.focus();
   });
   if (source === 'saved') action('Удалить из сохранённых', () => editSaved(name, true), 'fg-remove-icon');
-  else if (!saved.includes(name)) action('Сохранить', () => editSaved(name), 'fg-save-icon');
+  else if (!saved.includes(name)) action('Сохранить', () => editSaved(name));
   return row;
 }
 function renderLibraries() {
-  for (const [source, names] of [['recent', recent], ['saved', saved]]) {
-    document.querySelector('#' + source + '-list').replaceChildren(...names.map(name => listRow(name, source)));
-    document.querySelector('#' + source + '-empty').hidden = Boolean(names.length);
-  }
+  document.querySelector('#saved-list').replaceChildren(...saved.map(name => listRow(name, 'saved')));
+  document.querySelector('#saved-empty').hidden = Boolean(saved.length);
   renderAccountGroups();
 }
 document.querySelector('#save-group').onsubmit = event => {
@@ -253,8 +293,11 @@ document.querySelector('#defaults').onsubmit = event => {
   } catch { note.textContent = 'Браузер не разрешил сохранить ID.'; }
 };
 window.addEventListener('storage', event => {
-  if (event.key === recentKey || event.key === savedKey || event.key === null) {
-    recent = readNames(recentKey).slice(0, 20);
+  if (event.key === recentKey || event.key === null) {
+    recent = readHistory();
+    renderHistory();
+  }
+  if (event.key === savedKey || event.key === null) {
     saved = readNames(savedKey);
     renderLibraries();
   }
@@ -273,7 +316,7 @@ function updatePreview() {
   });
   preview.value = ['/erp', current[1], ...values].join(' ');
   if (preview.value !== sentCommand) sentCommand = '';
-  send.disabled = pendingGroups !== null || Boolean(sentCommand);
+  send.disabled = pendingCommand !== null || Boolean(sentCommand);
   status.textContent = '';
 }
 
@@ -339,10 +382,10 @@ form.addEventListener('submit', async event => {
   event.preventDefault();
   if (!validCommand()) return;
   updatePreview();
-  const names = usedGroups();
+  const entry = commandEntry();
   try {
     await navigator.clipboard.writeText(preview.value);
-    remember(names);
+    remember(entry);
     status.textContent = 'Команда скопирована';
   } catch {
     preview.focus();
@@ -355,25 +398,26 @@ send.addEventListener('click', () => {
   if (!send.dataset.ready) status.textContent = 'Для отправки обновите расширение и перезагрузите страницу.';
 });
 send.addEventListener('fg-sending', () => {
-  pendingGroups = usedGroups();
+  pendingCommand = commandEntry();
   send.disabled = true;
   status.textContent = 'Отправка…';
 });
 send.addEventListener('fg-result', event => {
-  if (pendingGroups === null) return;
+  if (pendingCommand === null) return;
   const result = JSON.parse(event.detail);
   if (result.ok) {
-    remember(pendingGroups);
+    remember(pendingCommand);
     sentCommand = result.command;
     window.setTimeout(() => {
       if (sentCommand === result.command) {
         sentCommand = '';
-        send.disabled = pendingGroups !== null;
+        send.disabled = pendingCommand !== null;
       }
     }, 1200);
   }
-  pendingGroups = null;
+  pendingCommand = null;
   send.disabled = sentCommand === preview.value;
   status.textContent = result.ok ? 'Команда отправлена в tools-product.' : result.error;
 });
 showGroup();
+renderHistory();

@@ -21,6 +21,7 @@
 .library li button { font-size: .84rem; padding: .2rem .5rem; }
 .fg-icon-list li { flex-wrap: nowrap; gap: .25rem; }
 .fg-icon-list code { min-width: 0; flex: 1; }
+#recent-list code { white-space: pre-wrap; }
 .fg-icon-list li button { display: grid; place-items: center; flex: 0 0 1.75rem; height: 1.75rem; padding: 0; color: var(--accent); }
 .fg-icon-list svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linejoin: round; }
 .library p { color: #50635e; margin: 0; }

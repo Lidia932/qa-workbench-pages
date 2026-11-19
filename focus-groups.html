@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Команды ФГ · Roistat QA</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="focus-groups.css?v=8">
-  <script src="focus-groups.js?v=8" defer></script>
+  <link rel="stylesheet" href="focus-groups.css?v=9">
+  <script src="focus-groups.js?v=9" defer></script>
 </head>
 <body>
   <header><div class="wrap brand"><span class="logo">QA</span> Roistat QA <a href="./index.html">Каталог</a></div></header>
@@ -14,15 +14,12 @@
     <h1>Команды фокус-групп</h1>
     <div class="fg-layout">
       <details class="library side recent-side" open>
-        <summary>Недавние ФГ</summary>
-        <template id="fg-copy-icon">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>
-        </template>
-        <template id="fg-save-icon">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v17l-6-4-6 4z"/></svg>
+        <summary>Недавние команды</summary>
+        <template id="command-repeat-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10a8 8 0 1 0 0 5M20 4v6h-6"/></svg>
         </template>
         <ul id="recent-list" class="fg-icon-list"></ul>
-        <p id="recent-empty">Здесь появятся ФГ из скопированных и отправленных команд.</p>
+        <p id="recent-empty">Здесь появятся скопированные и отправленные команды.</p>
       </details>
       <div class="fg-main">
         <details class="defaults">
@@ -84,6 +81,9 @@
       </div>
       <details class="library side saved-side">
         <summary>Сохранённые ФГ</summary>
+        <template id="fg-copy-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>
+        </template>
         <form id="save-group"><label>Название ФГ<input name="name" required pattern="[^,\s]+" autocomplete="off"></label><button>Добавить</button></form>
         <template id="fg-remove-icon">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7"/></svg>
