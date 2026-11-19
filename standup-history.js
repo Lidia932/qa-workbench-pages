@@ -55,11 +55,7 @@ function showReview(items, title) {
     const label = document.createElement('label');
     const e2e = item.kind === 'e2e';
     label.append(item.number ? 'Релиз ' + item.number : (e2e ? 'E2E · ' + workActions[item.action] + ' ' : 'Приёмка · ') + item.title);
-    const select = e2e ? e2eStatus() : document.createElement('select');
-    if (!e2e) {
-      for (const [value, text] of [['','Выберите итог'],['yes','Провели'],['no','Не провели']]) select.add(new Option(text,value));
-    }
-    label.append(select);
+    label.append(outcomeSelect(e2e));
     row.append(label);
     if (!item.number && !taskHref(item.href)) {
       const field = document.createElement('label');
@@ -184,8 +180,7 @@ document.querySelector('#reset-yesterday').onclick = () => {
   reviewItems.replaceChildren();
   review.hidden = true;
   manualYesterday.hidden = false;
-  block.querySelectorAll('.manual-task').forEach(row => row.remove());
-  block.querySelectorAll('input[type=checkbox]').forEach(input => input.checked = false);
+  resetPlanRows(pastPlans);
   block.querySelector('[name=past-count][value="0"]').checked = true;
   block.querySelectorAll('textarea, input[type=url]').forEach(input => input.value = '');
   block.querySelectorAll('#review-title, #post-status, #parse-status, #skipped-lines').forEach(el => el.textContent = '');

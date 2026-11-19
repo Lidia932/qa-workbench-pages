@@ -5,6 +5,7 @@ const people = new Map([
   ['smirnova.ksu', 'Ксения Смирнова']
 ]);
 const plans = document.querySelector('#plans');
+const pastPlans = document.querySelector('#past-plans');
 const preview = document.querySelector('#preview');
 const statusLine = document.querySelector('#status');
 const messageText = document.querySelector('#message-text');
@@ -14,14 +15,17 @@ let manuallyEdited = false;
 const workActions = {start:'Начнем работу по', continue:'Продолжим работу по'};
 const e2eOutcomes = {yes:'Провели E2E-тест по', no:'Не провели E2E-тест по', review:'E2E-тест на ревью:'};
 
-function e2eStatus() {
+function outcomeSelect(e2e) {
   const select = document.createElement('select');
-  select.setAttribute('aria-label','Итог E2E-теста');
-  for (const [value, label] of [['','Выберите итог'],['yes','Провели'],['no','Не провели'],['review','На ревью']]) select.add(new Option(label,value));
+  select.className = 'outcome-select';
+  select.add(new Option('Выберите итог', ''));
+  select.add(new Option('Провели', 'yes'));
+  select.add(new Option('Не провели', 'no'));
+  if (e2e) select.add(new Option('На ревью', 'review'));
   return select;
 }
 
-function addPlan(kind, focus = true) {
+function addPlan(kind, container, focus = true) {
   const row = document.querySelector(kind === 'release' ? '#release-template' : '#task-template').content.firstElementChild.cloneNode(true);
   if (kind === 'e2e') {
     row.classList.add('e2e');
@@ -40,16 +44,21 @@ function addPlan(kind, focus = true) {
   }
   const lead = row.querySelector('.lead');
   if (lead) {
-    row.dataset.number = plans.querySelectorAll('.release').length + 1;
+    row.dataset.number = container.querySelectorAll('.release').length + 1;
     row.querySelector('strong').textContent = 'Релиз ' + row.dataset.number;
   }
   populatePeople(row, new Map(), lead ? [...people.keys()] : []);
   if (!lead) row.querySelector('.remove').onclick = () => {
     row.remove();
-    document.querySelector('#add-' + kind).focus();
+    document.querySelector((container === pastPlans ? '#add-past-' : '#add-') + kind).focus();
     render();
   };
-  plans.append(row);
+  if (container === pastPlans) {
+    const label = document.createElement('label');
+    label.append('Итог', outcomeSelect(kind === 'e2e'));
+    row.append(label);
+  }
+  container.append(row);
   if (focus) row.querySelector('input').focus();
   render();
 }
@@ -140,39 +149,10 @@ function checkTaskLink(input, active = true) {
 }
 let linkErrorId = 0;
 
-function manualTask(container, e2e = false) {
-  const row = document.createElement('div');
-  row.className = 'manual-task';
-  for (const [name, caption] of [['task-name','Название задачи'],['url','Ссылка на задачу']]) {
-    const input = document.createElement('input');
-    input.className = name;
-    input.placeholder = caption;
-    input.setAttribute('aria-label', caption);
-    input.required = true;
-    if (name === 'url') {input.type = 'url';input.pattern = 'https?://.+';}
-    row.append(input);
-  }
-  const remove = document.createElement('button');
-  remove.type = 'button';
-  remove.textContent = '×';
-  remove.setAttribute('aria-label','Убрать задачу');
-  remove.onclick = () => {
-    if (!e2e && container.querySelectorAll('.manual-task').length === 1) {
-      document.getElementById(container.id.split('-')[0]).checked = false;
-    }
-    row.remove();
-    render();
-  };
-  row.append(remove);
-  if (e2e) row.prepend(e2eStatus());
-  addAcceptancePeople(row, [], e2e ? 'Исполнители' : 'Ведёт приёмку');
-  container.insertBefore(row, container.querySelector('.add-manual'));
-  return row;
-}
-
 function validStandup() {
   const invalid = Array.from(document.querySelectorAll('#fields input, #fields textarea'))
-    .find(input => !input.closest('[hidden]') && !input.validity.valid);
+    .find(input => !input.validity.valid && !input.closest('[hidden]') &&
+      input.closest('.plan')?.querySelector('.outcome-select')?.value !== '');
   if (!invalid) return true;
   invalid.reportValidity();
   return false;
@@ -180,63 +160,55 @@ function validStandup() {
 
 function yesterday() {
   if (!document.querySelector('#review').hidden) return reviewedRows().concat(lines('#yesterday'));
-  const rows = [];
-  const n = document.querySelector('[name="past-count"]:checked').value;
-  if (n !== '0') rows.push([n === '1' ? 'Провели 1 релиз' : 'Провели 2 релиза']);
-  for (const [id, phrase] of [['accepted', 'Провели приемку'], ['deferred', 'Не провели приемку']]) {
-    const active = document.getElementById(id).checked;
-    const container = document.getElementById(id + '-tasks');
-    container.hidden = !active;
-    if (!active) continue;
-    if (!container.querySelector('.manual-task')) manualTask(container);
-    for (const row of container.querySelectorAll('.manual-task')) {
-      const title = row.querySelector('.task-name').value.trim();
-      row.querySelector('.task-name').setCustomValidity(title ? '' : 'Введите название задачи');
-      const href = checkTaskLink(row.querySelector('.url'));
-      if (title) rows.push(taskParts(phrase, title, href, row));
-    }
-  }
-  for (const row of document.querySelectorAll('#past-e2e .manual-task')) {
-    const phase = row.querySelector('select').value;
-    const title = row.querySelector('.task-name');
-    const url = row.querySelector('.url');
-    title.required = url.required = Boolean(phase);
-    title.setCustomValidity(phase && !title.value.trim() ? 'Введите название задачи' : '');
-    const href = checkTaskLink(url, Boolean(phase));
-    if (phase && title.value.trim()) rows.push(taskParts(e2eOutcomes[phase], title.value.trim(), href, row, true));
-  }
-  return rows.concat(lines('#yesterday'));
+  return planRows(pastPlans, 'past-count').concat(lines('#yesterday'));
 }
 
 function today() {
+  return planRows(plans, 'today-count').concat(lines('#other'));
+}
+
+function planRows(container, countName) {
   const entries = [];
-  for (const row of plans.children) {
-    const selected = Array.from(row.querySelectorAll('input:checked'), el => el.value);
-    const parts = [];
+  const count = Number(document.querySelector('input[name="' + countName + '"]:checked').value);
+  for (const row of container.children) {
+    const outcome = row.querySelector('.outcome-select')?.value;
+    const verb = outcome === 'no' ? 'Не провели' : 'Провели';
     if (row.classList.contains('release')) {
       const number = row.dataset.number;
-      row.hidden = Number(number) > Number(document.querySelector('[name="today-count"]:checked').value);
-      if (row.hidden) continue;
-      parts.push('Проведем ' + number + ' релиз');
+      row.hidden = Number(number) > count;
+      if (row.hidden || outcome === '') continue;
+      const parts = [outcome ? verb + ' релиз №' + number : 'Проведем ' + number + ' релиз'];
       const lead = row.querySelector('.lead').value;
-      if (lead) parts.push(' - ведет ', {login: lead});
+      if (lead) parts.push(outcome ? ' - ведущий ' : ' - ведет ', {login: lead});
+      const selected = selectedPeople(row);
       if (selected.length) {
-        parts.push(lead ? ', участвуют ' : ' - участвуют ');
+        parts.push(lead ? ', ' : ' - ', outcome ? 'участники ' : 'участвуют ');
         appendPeople(parts, selected);
       }
-    } else {
-      const titleInput = row.querySelector('.task-name');
-      const url = row.querySelector('.url');
-      const title = titleInput.value.trim();
-      titleInput.setCustomValidity(!title ? 'Введите название задачи' : '');
-      const href = checkTaskLink(url);
-      if (!title) continue;
-      const action = row.querySelector('.work-action');
-      parts.push(...taskParts(action ? workActions[action.value] : 'Проведем приемку', title, href, row, Boolean(action)));
+      entries.push(parts);
+      continue;
     }
-    entries.push(parts);
+
+    const active = outcome !== '';
+    const titleInput = row.querySelector('.task-name');
+    const title = titleInput.value.trim();
+    titleInput.setCustomValidity(active && !title ? 'Введите название задачи' : '');
+    const url = row.querySelector('.url');
+    url.required = active;
+    const href = checkTaskLink(url, active);
+    if (!active || !title) continue;
+
+    const action = row.querySelector('.work-action');
+    let phrase = outcome ? verb + ' приемку' : 'Проведем приемку';
+    if (action) {
+      phrase = workActions[action.value];
+      if (outcome === 'review') phrase = e2eOutcomes.review;
+      if (outcome === 'yes') phrase = action.value === 'start' ? 'Начали работу по' : 'Продолжили работу по';
+      if (outcome === 'no') phrase = action.value === 'start' ? 'Не начали работу по' : 'Не продолжили работу по';
+    }
+    entries.push(taskParts(phrase, title, href, row, Boolean(action)));
   }
-  return entries.concat(lines('#other'));
+  return entries;
 }
 
 function previewPart(part) {
@@ -304,16 +276,17 @@ messageText.oninput = () => {
   document.querySelector('#manual-copy').hidden = true;
 };
 
-document.querySelector('#add-task').onclick = () => addPlan('task');
-document.querySelector('#add-e2e').onclick = () => addPlan('e2e');
-document.querySelector('#add-past-e2e').onclick = () => {
-  manualTask(document.querySelector('#past-e2e'), true).querySelector('.task-name').focus();
-  render();
-};
+for (const kind of ['task', 'e2e']) {
+  document.querySelector('#add-' + kind).onclick = () => addPlan(kind, plans);
+  document.querySelector('#add-past-' + kind).onclick = () => addPlan(kind, pastPlans);
+}
+function resetPlanRows(container) {
+  container.querySelectorAll('.task').forEach(row => row.remove());
+  for (const select of container.querySelectorAll('select')) select.value = '';
+  for (const input of container.querySelectorAll('.release .people input')) input.checked = true;
+}
 document.querySelector('#reset-today').onclick = () => {
-  plans.querySelectorAll('.task').forEach(row => row.remove());
-  for (const lead of plans.querySelectorAll('.lead')) lead.value = '';
-  for (const input of plans.querySelectorAll('.release .people input')) input.checked = true;
+  resetPlanRows(plans);
   document.querySelector('[name=today-count][value="1"]').checked = true;
   document.querySelector('#other').value = '';
   document.querySelector('.current details').open = false;
@@ -323,13 +296,6 @@ document.querySelector('#reset-problems').onclick = () => {
   document.querySelector('#problems').value = '';
   render();
 };
-for (const container of document.querySelectorAll('#accepted-tasks, #deferred-tasks')) {
-  const add = document.createElement('button');
-  add.textContent = '+ Ещё задача';
-  add.className = 'add-manual';
-  add.onclick = () => {manualTask(container).querySelector('input').focus();render();};
-  container.append(add);
-}
 document.querySelector('#fields').addEventListener('input', render);
 document.querySelector('#copy').onclick = async () => {
   const text = render();

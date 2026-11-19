@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Стендап · Roistat QA</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="standup.css?v=edit1">
-  <script src="standup.js?v=edit1" defer></script>
-  <script src="standup-history.js?v=e2e1" defer></script>
-  <script src="standup-team.js?v=e2e1" defer></script>
+  <link rel="stylesheet" href="standup.css?v=manual2">
+  <script src="standup.js?v=manual2" defer></script>
+  <script src="standup-history.js?v=manual2" defer></script>
+  <script src="standup-team.js?v=manual2" defer></script>
 </head>
 <body>
   <header><div class="wrap brand"><span class="logo">QA</span> Roistat QA <a href="./index.html">Каталог</a></div></header>
@@ -36,20 +36,13 @@
             <small id="skipped-lines"></small>
           </div>
           <div id="manual-yesterday">
-          <fieldset class="count"><legend>Сколько релизов провели?</legend>
+          <fieldset class="count"><legend>Сколько релизов планировали?</legend>
             <label><input type="radio" name="past-count" value="0" checked>Без релизов</label>
             <label><input type="radio" name="past-count" value="1">1 релиз</label>
             <label><input type="radio" name="past-count" value="2">2 релиза</label>
           </fieldset>
-          <div class="outcome">
-            <label><input id="accepted" type="checkbox">Провели приёмку</label>
-            <div id="accepted-tasks" hidden></div>
-          </div>
-          <div class="outcome">
-            <label><input id="deferred" type="checkbox">Не провели приёмку</label>
-            <div id="deferred-tasks" hidden></div>
-          </div>
-          <div id="past-e2e"><button type="button" class="add-manual" id="add-past-e2e">+ E2E-тест</button></div>
+          <div id="past-plans"></div>
+          <div class="actions"><button id="add-past-task">+ Приёмка</button><button id="add-past-e2e">+ E2E-тест</button></div>
           </div>
           <details><summary>Другие итоги</summary>
             <textarea id="yesterday" aria-label="Другие итоги" rows="2"></textarea>
