@@ -3,8 +3,8 @@
 .defaults summary { color: #285844; font-weight: 600; cursor: pointer; }
 .defaults label { flex: 0 1 16rem; }
 .defaults input { margin-top: .25rem; }
-.wrap { width: min(100% - 2rem, 100rem); }
-.fg-layout { display: grid; grid-template-columns: minmax(21rem, 1.8fr) minmax(0, 3fr) minmax(19rem, 1.65fr); grid-template-areas: "recent main saved"; gap: 1rem; align-items: start; }
+.wrap { width: min(100% - 2rem, 118rem); }
+.fg-layout { display: grid; grid-template-columns: clamp(23rem, 23vw, 28rem) minmax(0, 1fr) clamp(21rem, 21vw, 26rem); grid-template-areas: "recent main saved"; gap: 1rem; align-items: start; }
 .fg-main { grid-area: main; min-width: 0; }
 .library.side { background: var(--tint); border-top-color: var(--accent); }
 .side summary { color: var(--accent); cursor: pointer; font-weight: 650; }
@@ -44,7 +44,7 @@
 #account-list button { max-width: 100%; border-radius: .35rem; padding: .24rem .5rem; font: .83rem/1.35 monospace; overflow-wrap: anywhere; text-align: left; }
 #account-list button[aria-pressed=true] { color: white; background: #166575; border-color: #166575; }
 #group-count { padding-block: .35rem; }
-@media (max-width: 1200px) { .fg-layout { grid-template-columns: repeat(2,minmax(0,1fr)); grid-template-areas: "main main" "recent saved"; } }
+@media (max-width: 94rem) { .fg-layout { grid-template-columns: repeat(2,minmax(0,1fr)); grid-template-areas: "main main" "recent saved"; } }
 @media (max-width: 800px) { .fg-layout { grid-template-columns: minmax(0,1fr); grid-template-areas: "main" "recent" "saved"; } }
 #send-help { display: block; color: #50635e; margin-top: .4rem; }
 #send-help[hidden] { display: none; }
