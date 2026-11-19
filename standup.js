@@ -58,6 +58,49 @@ function appendPeople(parts, logins) {
   });
 }
 
+function taskHref(value) {
+  try {
+    const url = new URL(value);
+    return /^https?:$/.test(url.protocol) ? url.href : '';
+  } catch { return ''; }
+}
+
+function manualTask(container) {
+  const row = document.createElement('div');
+  row.className = 'manual-task';
+  for (const [name, caption] of [['task-name','Название задачи'],['url','Ссылка на задачу']]) {
+    const input = document.createElement('input');
+    input.className = name;
+    input.placeholder = caption;
+    input.setAttribute('aria-label', caption);
+    input.required = true;
+    if (name === 'url') {input.type = 'url';input.pattern = 'https?://.+';}
+    row.append(input);
+  }
+  const remove = document.createElement('button');
+  remove.type = 'button';
+  remove.textContent = '×';
+  remove.setAttribute('aria-label','Убрать задачу');
+  remove.onclick = () => {
+    if (container.querySelectorAll('.manual-task').length === 1) {
+      document.getElementById(container.id.split('-')[0]).checked = false;
+    }
+    row.remove();
+    render();
+  };
+  row.append(remove);
+  container.insertBefore(row, container.querySelector('.add-manual'));
+  return row;
+}
+
+function validStandup() {
+  const invalid = Array.from(document.querySelectorAll('#fields input, #fields textarea'))
+    .find(input => !input.closest('[hidden]') && !input.validity.valid);
+  if (!invalid) return true;
+  invalid.reportValidity();
+  return false;
+}
+
 function yesterday() {
   if (!document.querySelector('#review').hidden) return reviewedRows().concat(lines('#yesterday'));
   const rows = [];
@@ -65,11 +108,16 @@ function yesterday() {
   if (n !== '0') rows.push([n === '1' ? 'Провели 1 релиз' : 'Провели 2 релиза']);
   for (const [id, phrase] of [['accepted', 'Провели приемку'], ['deferred', 'Не провели приемку']]) {
     const active = document.getElementById(id).checked;
-    document.getElementById(id + '-tasks').hidden = !active;
+    const container = document.getElementById(id + '-tasks');
+    container.hidden = !active;
     if (!active) continue;
-    const tasks = lines('#' + id + '-tasks');
-    if (!tasks.length) rows.push([phrase]);
-    for (const [task] of tasks) rows.push([phrase + ' ' + task]);
+    if (!container.querySelector('.manual-task')) manualTask(container);
+    for (const row of container.querySelectorAll('.manual-task')) {
+      const title = row.querySelector('.task-name').value.trim();
+      row.querySelector('.task-name').setCustomValidity(title ? '' : 'Введите название задачи');
+      const href = taskHref(row.querySelector('.url').value);
+      if (title && href) rows.push([phrase + ' ', {title,href}]);
+    }
   }
   return rows.concat(lines('#yesterday'));
 }
@@ -94,9 +142,9 @@ function today() {
       const titleInput = row.querySelector('.task-name');
       const url = row.querySelector('.url');
       const title = titleInput.value.trim();
-      titleInput.setCustomValidity(!title && (url.value || selected.length) ? 'Введите название задачи' : '');
-      if (!title) continue;
-      parts.push('Проведем приемку ', url.value && url.validity.valid ? {title, href: url.value} : title);
+      titleInput.setCustomValidity(!title ? 'Введите название задачи' : '');
+      if (!title || !url.validity.valid) continue;
+      parts.push('Проведем приемку ', {title, href: url.value});
       if (selected.length) {
         parts.push(' QA ');
         appendPeople(parts, selected);
@@ -154,11 +202,17 @@ function render() {
 }
 
 document.querySelector('#add-task').onclick = () => addPlan('task');
+for (const container of document.querySelectorAll('#accepted-tasks, #deferred-tasks')) {
+  const add = document.createElement('button');
+  add.textContent = '+ Ещё задача';
+  add.className = 'add-manual';
+  add.onclick = () => {manualTask(container).querySelector('input').focus();render();};
+  container.append(add);
+}
 document.querySelector('#fields').addEventListener('input', render);
 document.querySelector('#copy').onclick = async () => {
   const text = render();
-  const invalid = plans.querySelector(':invalid');
-  if (invalid) return invalid.reportValidity();
+  if (!validStandup()) return;
   try {
     await navigator.clipboard.writeText(text);
     statusLine.textContent = savePlan() ? 'Скопировано. План сохранён.' : 'Скопировано. Сохранить план в браузере не удалось.';
@@ -173,4 +227,3 @@ document.querySelector('#copy').onclick = async () => {
 };
 addPlan('release', false);
 addPlan('release', false);
-addPlan('task', false);

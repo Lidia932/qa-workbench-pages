@@ -45,17 +45,30 @@ function showReview(items, title) {
   imported = items;
   reviewItems.replaceChildren();
   for (const item of items) {
+    const row = document.createElement('div');
+    row.className = 'review-item';
     const label = document.createElement('label');
-    label.className = 'review-item';
     label.append(item.number ? 'Релиз ' + item.number : 'Приёмка · ' + item.title);
     const select = document.createElement('select');
     for (const [value, text] of [['','Выберите итог'],['yes','Провели'],['no','Не провели']]) select.add(new Option(text,value));
     label.append(select);
-    reviewItems.append(label);
+    row.append(label);
+    if (!item.number && !taskHref(item.href)) {
+      const field = document.createElement('label');
+      field.append('Ссылка на задачу');
+      const input = document.createElement('input');
+      input.type = 'url';
+      input.pattern = 'https?://.+';
+      input.placeholder = 'https://';
+      field.append(input);
+      row.append(field);
+    }
+    reviewItems.append(row);
   }
   document.querySelector('#review-title').textContent = title;
   manualYesterday.hidden = true;
   review.hidden = false;
+  document.querySelector('.import-bar').open = false;
   render();
 }
 function reviewedRows() {
@@ -63,38 +76,51 @@ function reviewedRows() {
   const selects = reviewItems.querySelectorAll('select');
   imported.forEach((item,index) => {
     const value = selects[index].value;
+    const field = reviewItems.children[index].querySelector('input');
+    if (field) field.required = Boolean(value);
     if (!value) return;
     const verb = value === 'yes' ? 'Провели' : 'Не провели';
     if (item.number) rows.push([verb + ' релиз №' + item.number]);
-    else rows.push([verb + ' приемку ', /^https?:\/\//i.test(item.href || '') ? {title:item.title,href:item.href} : item.title]);
+    else {
+      const href = taskHref(field ? field.value : item.href);
+      if (href) rows.push([verb + ' приемку ', {title:item.title,href}]);
+    }
   });
   return rows;
 }
 
 function parseToday(body) {
   const items = [];
-  for (const raw of body.split(/\r?\n/)) {
-    const line = raw.trim().replace(/^[*•–-]\s*/, '').trim();
+  const skipped = [];
+  const normalized = body.normalize('NFKC').replace(/[\u200b-\u200d\ufeff]/g,'')
+    .replace(/\*\*/g,'').replace(/\r\n?|<br\s*\/?\s*>/gi,'\n')
+    .replace(/(при[её]мк[ау][ \t:–—-]*)\n[ \t]*(?=\[[^\]\n]+\]\(https?:)/gi,'$1 ');
+  for (const raw of normalized.split(/\n|\s+(?=[*•]\s+(?:провед|при[её]м))/i)) {
+    const line = raw.trim().replace(/^(?:>\s*|(?:[*•–—-]|\d+[.)])\s+)*/,'').trim();
+    if (!line || line === '—') continue;
     if (/^(?:провед[её]м\s+)?(?:2|два)\s+релиза(?:\s|$|[.,-])/i.test(line)) {
       items.push({number:'1'},{number:'2'});
       continue;
     }
     const release = line.match(/^(?:провед[её]м\s+)?(\d+)(?:-й)?\s+релиз(?:\s|$|[.,-])/i);
     if (release) { items.push({number:release[1]}); continue; }
-    const acceptance = line.match(/^(?:провед[её]м\s+)?при[её]мк[ау]\s*(.*)$/i);
-    if (!acceptance) continue;
-    const task = acceptance[1].replace(/(?:^|\s+)QA(?:\s|:|$).*$/i,'').trim();
-    const link = task.match(/^\[(.+)\]\((https?:\/\/[^\s]+)\)$/i);
-    let href = '';
-    if (link) { try { href = new URL(link[2]).href; } catch {} }
-    items.push({title:link?.[1] || task || 'Без названия', href});
+    const acceptance = line.match(/(?:^|\s)при[её]мк[а-яё]*[\s:–—-]*(.*)$/i);
+    const taskLink = /https?:\/\/[^\s/)]+\/tasks\/task\/[^\s)]+/i.test(line);
+    if (!acceptance && !taskLink) {skipped.push(line);continue;}
+    const task = (acceptance?.[1] || line).replace(/(?:^|\s+)QA(?:\s|:|$).*$/i,'').trim();
+    const link = line.match(/\[([^\]\n]+)\]\(<?(https?:\/\/[^\s>]+?)>?\)(?=\s|$|[.,;])/i);
+    const rawUrl = task.match(/https?:\/\/[^\s<>]+/i)?.[0];
+    const href = taskHref(link?.[2] || rawUrl);
+    const title = link?.[1] || (rawUrl ? task.replace(rawUrl,'').trim() : task) || rawUrl || 'Без названия';
+    items.push({title,href});
   }
-  return items;
+  return {items,skipped};
 }
 function importBody(body, title, status) {
-  const items = parseToday(body);
-  if (!items.length) {status.textContent = 'В разделе «Сегодня» не найдены релизы или приёмки.';return;}
+  const {items,skipped} = parseToday(body);
+  if (!items.length) {status.textContent = 'В разделе «Сегодня» не найдены релизы или приёмки. ' + skipped.join(' · ');return;}
   showReview(items, title);
+  document.querySelector('#skipped-lines').textContent = skipped.length ? 'Не распознаны строки: ' + skipped.join(' · ') : '';
   status.textContent = 'Загружено пунктов: ' + items.length;
 }
 const loadPost = document.querySelector('#load-post');
@@ -116,7 +142,10 @@ document.querySelector('#parse-chat').onclick = () => {
 };
 previous.onclick = () => {
   const last = lastPlan();
-  if (last) showReview(last.items, previous.textContent.replace('Взять сохранённый план', 'План'));
+  if (last) {
+    showReview(last.items, previous.textContent.replace('Взять сохранённый план', 'План'));
+    document.querySelector('#skipped-lines').textContent = '';
+  }
 };
 document.querySelector('#manual-mode').onclick = () => {review.hidden = true;manualYesterday.hidden = false;render();};
 document.querySelector('#save-plan').onclick = () => {

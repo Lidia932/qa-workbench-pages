@@ -17,7 +17,7 @@
     <div class="workspace">
       <div id="fields">
         <fieldset class="day past"><legend>Вчера</legend>
-          <div class="import-bar">
+          <details class="import-bar" open><summary>Импорт прошлого стендапа</summary>
             <label for="platrum-url">Ссылка на прошлый стендап в Platrum</label>
             <input id="platrum-url" type="url" placeholder="https://roistat.chat.platrum.ru/…/pl/…">
             <button id="load-post" type="button">Загрузить из Platrum</button>
@@ -29,10 +29,11 @@
               <button type="button" id="parse-chat">Разобрать план</button>
               <span id="parse-status" role="status"></span>
             </details>
-          </div>
+          </details>
           <div id="review" hidden>
             <div class="plan-head"><strong id="review-title"></strong><button id="manual-mode">К шаблонам</button></div>
             <div id="review-items"></div>
+            <small id="skipped-lines"></small>
           </div>
           <div id="manual-yesterday">
           <fieldset class="count"><legend>Сколько релизов провели?</legend>
@@ -42,11 +43,11 @@
           </fieldset>
           <div class="outcome">
             <label><input id="accepted" type="checkbox">Провели приёмку</label>
-            <textarea id="accepted-tasks" aria-label="Задачи, по которым провели приёмку" placeholder="Названия задач, если нужны" rows="2" hidden></textarea>
+            <div id="accepted-tasks" hidden></div>
           </div>
           <div class="outcome">
             <label><input id="deferred" type="checkbox">Не провели приёмку</label>
-            <textarea id="deferred-tasks" aria-label="Задачи, по которым не провели приёмку" placeholder="Названия задач, если нужны" rows="2" hidden></textarea>
+            <div id="deferred-tasks" hidden></div>
           </div>
           </div>
           <details><summary>Другие итоги</summary>
@@ -61,10 +62,10 @@
           </fieldset>
           <div id="plans"></div>
           <div class="actions"><button id="add-task">+ Приёмка</button></div>
-          <label for="other">Другие планы</label><textarea id="other" rows="2"></textarea>
+          <details><summary>Другие планы</summary><textarea id="other" aria-label="Другие планы" rows="2"></textarea></details>
         </fieldset>
         <fieldset class="day blockers"><legend>Проблемы</legend>
-          <label for="problems">Что мешает работе?</label><textarea id="problems" rows="2" placeholder="—"></textarea>
+          <textarea id="problems" aria-label="Что мешает работе?" rows="1" placeholder="—"></textarea>
         </fieldset>
       </div>
       <div class="result">
@@ -81,8 +82,8 @@
     <div class="plan-head"><h2 id="team-title">Состав QA</h2><button id="close-team" aria-label="Закрыть">×</button></div>
     <form id="team-form">
       <div id="team-rows"></div>
-      <button type="button" id="new-person">+ Добавить QA</button>
-      <button type="submit">Сохранить состав</button>
+      <div class="team-actions"><button type="button" id="new-person">+ Добавить QA</button>
+      <button type="submit">Сохранить состав</button></div>
       <span id="team-status" role="status"></span>
     </form>
   </dialog>
@@ -97,7 +98,7 @@
     <div class="plan task">
       <div class="plan-head"><strong>Приёмка</strong><button class="remove" aria-label="Удалить приёмку" title="Удалить приёмку">×</button></div>
       <label>Название задачи<input class="task-name" type="text"></label>
-      <label>Ссылка на задачу (по желанию)<input class="url" type="url" pattern="https?://.+" placeholder="https://"></label>
+      <label>Ссылка на задачу<input class="url" type="url" required pattern="https?://.+" placeholder="https://"></label>
       <fieldset class="people"><legend>QA</legend></fieldset>
     </div>
   </template>
