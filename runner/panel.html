@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Пульт автотестов · Roistat QA</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="autotests.css">
+<link rel="stylesheet" href="theme.css">
+<script src="theme.js"></script>
+<script src="panel.js" defer></script>
+<header><div class="wrap brand"><span class="logo">QA</span> Roistat QA <a href="https://lidia932.github.io/qa-workbench-pages/">Каталог</a></div></header>
+<main class="wrap run-page">
+  <h1>Прогон автотестов</h1>
+  <article class="card">
+    <h2>Выбор сценариев</h2>
+    <p id="inventory" role="status">Читаем каталог Playwright…</p>
+    <label for="section">Раздел</label><select id="section"></select>
+    <label class="check"><input id="whole" type="checkbox">Выбрать весь раздел</label>
+    <div id="checks" class="checks"></div>
+    <div class="controls"><button class="primary" type="button" id="start" disabled>Запустить выбранные</button>
+      <span id="count" aria-live="polite">Выбрано 0</span>
+      <button type="button" id="clear" disabled>Снять выбор</button></div>
+    <p class="run-error" id="error" role="alert" hidden></p>
+  </article>
+  <article class="card" id="report" hidden>
+    <h2 id="heading">Результаты прогона</h2>
+    <p id="summary" role="status"></p>
+    <progress id="progress" aria-label="Выполнено сценариев"></progress>
+    <div id="results"></div>
+  </article>
+</main>
+</html>

@@ -1,5 +1,6 @@
 // Группа, название, назначение, адрес, необязательная иконка быстрого доступа.
 const tools = [
+  ['Автотесты', 'Прогон автотестов', 'Запустить раздел или отдельные сценарии и посмотреть результаты', './autotests.html'],
   ['Тестирование', 'Hoppscotch', 'Отправить API-запрос', 'https://hoppscotch.io/', 'api'],
   ['Тестирование', 'Qase', 'Открыть тест-кейсы и прогоны', 'https://app.qase.io/', 'cases'],
   ['Автотесты', 'Cloud E2E', 'Открыть список PR в Stash', 'https://stash.roistat.com/projects/MAIN/repos/cloud-e2e/pull-requests', 'pr'],
