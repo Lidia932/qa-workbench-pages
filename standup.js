@@ -15,15 +15,7 @@ function addPlan(kind, focus = true) {
     row.dataset.number = plans.querySelectorAll('.release').length + 1;
     row.querySelector('strong').textContent = 'Релиз ' + row.dataset.number;
   }
-  for (const [login, name] of people) {
-    if (lead) lead.add(new Option(name, login));
-    const label = document.createElement('label');
-    const check = document.createElement('input');
-    check.type = 'checkbox';
-    check.value = login;
-    label.append(check, name);
-    row.querySelector('.people').append(label);
-  }
+  populatePeople(row);
   if (!lead) row.querySelector('.remove').onclick = () => {
     row.remove();
     document.querySelector('#add-' + kind).focus();
@@ -32,6 +24,25 @@ function addPlan(kind, focus = true) {
   plans.append(row);
   if (focus) row.querySelector('input').focus();
   render();
+}
+
+function populatePeople(row, rename = new Map()) {
+  const lead = row.querySelector('.lead');
+  const previous = lead?.value;
+  const selected = new Set(Array.from(row.querySelectorAll('input:checked'), el => rename.get(el.value) ?? el.value));
+  if (lead) lead.replaceChildren(new Option('Выбрать', ''));
+  row.querySelectorAll('.people label').forEach(label => label.remove());
+  for (const [login, name] of people) {
+    if (lead) lead.add(new Option(name, login));
+    const label = document.createElement('label');
+    const check = document.createElement('input');
+    check.type = 'checkbox';
+    check.value = login;
+    check.checked = selected.has(login);
+    label.append(check, name);
+    row.querySelector('.people').append(label);
+  }
+  if (lead) lead.value = people.has(rename.get(previous) ?? previous) ? (rename.get(previous) ?? previous) : '';
 }
 
 function lines(id) {
@@ -48,6 +59,7 @@ function appendPeople(parts, logins) {
 }
 
 function yesterday() {
+  if (!document.querySelector('#review').hidden) return reviewedRows().concat(lines('#yesterday'));
   const rows = [];
   const n = document.querySelector('[name="past-count"]:checked').value;
   if (n !== '0') rows.push([n === '1' ? 'Провели 1 релиз' : 'Провели 2 релиза']);
@@ -149,7 +161,7 @@ document.querySelector('#copy').onclick = async () => {
   if (invalid) return invalid.reportValidity();
   try {
     await navigator.clipboard.writeText(text);
-    statusLine.textContent = 'Скопировано';
+    statusLine.textContent = savePlan() ? 'Скопировано. План сохранён.' : 'Скопировано. Сохранить план в браузере не удалось.';
   } catch {
     const manual = document.querySelector('#manual-copy');
     manual.hidden = false;

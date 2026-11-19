@@ -7,14 +7,34 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="standup.css">
   <script src="standup.js" defer></script>
+  <script src="standup-history.js" defer></script>
+  <script src="standup-team.js" defer></script>
 </head>
 <body>
   <header><div class="wrap brand"><span class="logo">QA</span> Roistat QA <a href="./index.html">Каталог</a></div></header>
   <main class="wrap">
-    <h1>Стендап</h1>
+    <div class="page-title"><h1>Стендап</h1><button id="edit-team" aria-haspopup="dialog">Состав QA</button></div>
     <div class="workspace">
       <div id="fields">
         <fieldset class="day past"><legend>Вчера</legend>
+          <div class="import-bar">
+            <label for="platrum-url">Ссылка на прошлый стендап в Platrum</label>
+            <input id="platrum-url" type="url" placeholder="https://roistat.chat.platrum.ru/…/pl/…">
+            <button id="load-post" type="button">Загрузить из Platrum</button>
+            <small>Для импорта войдите в Platrum в этом профиле Chrome и установите <a class="extension-help" href="./index.html#extensions">QA Merge Checker 1.1.0</a>.</small>
+            <small id="post-status" role="status"></small>
+            <button type="button" id="use-previous" hidden></button>
+            <details><summary>Вставить стендап из Platrum</summary>
+              <label>Текст сообщения<textarea id="chat-text" rows="5" placeholder="Сегодня:"></textarea></label>
+              <button type="button" id="parse-chat">Разобрать план</button>
+              <span id="parse-status" role="status"></span>
+            </details>
+          </div>
+          <div id="review" hidden>
+            <div class="plan-head"><strong id="review-title"></strong><button id="manual-mode">К шаблонам</button></div>
+            <div id="review-items"></div>
+          </div>
+          <div id="manual-yesterday">
           <fieldset class="count"><legend>Сколько релизов провели?</legend>
             <label><input type="radio" name="past-count" value="0" checked>Без релизов</label>
             <label><input type="radio" name="past-count" value="1">1 релиз</label>
@@ -27,6 +47,7 @@
           <div class="outcome">
             <label><input id="deferred" type="checkbox">Не провели приёмку</label>
             <textarea id="deferred-tasks" aria-label="Задачи, по которым не провели приёмку" placeholder="Названия задач, если нужны" rows="2" hidden></textarea>
+          </div>
           </div>
           <details><summary>Другие итоги</summary>
             <textarea id="yesterday" aria-label="Другие итоги" rows="2"></textarea>
@@ -50,11 +71,21 @@
         <h2>Сообщение для чата</h2>
         <div id="preview"></div>
         <button id="copy">Скопировать сообщение</button>
+        <button id="save-plan">Сохранить план</button>
         <span id="status" role="status"></span>
         <textarea id="manual-copy" aria-label="Текст для копирования" rows="8" readonly hidden></textarea>
       </div>
     </div>
   </main>
+  <dialog id="team-panel" aria-labelledby="team-title">
+    <div class="plan-head"><h2 id="team-title">Состав QA</h2><button id="close-team" aria-label="Закрыть">×</button></div>
+    <form id="team-form">
+      <div id="team-rows"></div>
+      <button type="button" id="new-person">+ Добавить QA</button>
+      <button type="submit">Сохранить состав</button>
+      <span id="team-status" role="status"></span>
+    </form>
+  </dialog>
   <template id="release-template">
     <div class="plan release">
       <div class="plan-head"><strong>Релиз</strong></div>
