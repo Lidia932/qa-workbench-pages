@@ -267,7 +267,8 @@ editMessage.onclick = () => {
   manuallyEdited = false;
   messageText.hidden = !editing;
   preview.hidden = editing;
-  editMessage.textContent = editing ? 'Вернуться к тексту из формы' : 'Редактировать';
+  editMessage.title = editing ? 'Вернуться к тексту из формы' : 'Редактировать сообщение';
+  editMessage.setAttribute('aria-label', editMessage.title);
   editMessage.setAttribute('aria-expanded', String(editing));
   render();
   if (editing) messageText.focus();
