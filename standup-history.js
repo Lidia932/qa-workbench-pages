@@ -18,7 +18,7 @@ function savePlan() {
     if (row.dataset.number) items.push({number: row.dataset.number});
     else {
       const title = row.querySelector('.task-name').value.trim();
-      if (title) items.push({title, href:row.querySelector('.url').value.trim()});
+      if (title) items.push({title, href:row.querySelector('.url').value.trim(), qa:selectedPeople(row)});
     }
   }
   try {
@@ -63,6 +63,7 @@ function showReview(items, title) {
       field.append(input);
       row.append(field);
     }
+    if (!item.number) addAcceptancePeople(row, item.qa || []);
     reviewItems.append(row);
   }
   document.querySelector('#review-title').textContent = title;
@@ -76,14 +77,15 @@ function reviewedRows() {
   const selects = reviewItems.querySelectorAll('select');
   imported.forEach((item,index) => {
     const value = selects[index].value;
-    const field = reviewItems.children[index].querySelector('input');
+    const row = reviewItems.children[index];
+    const field = row.querySelector('input[type=url]');
     if (field) field.required = Boolean(value);
     if (!value) return;
     const verb = value === 'yes' ? 'Провели' : 'Не провели';
     if (item.number) rows.push([verb + ' релиз №' + item.number]);
     else {
       const href = taskHref(field ? field.value : item.href);
-      if (href) rows.push([verb + ' приемку ', {title:item.title,href}]);
+      if (href) rows.push(acceptanceParts(verb + ' приемку', item.title, href, row));
     }
   });
   return rows;
@@ -94,6 +96,7 @@ function parseToday(body) {
   const skipped = [];
   const normalized = body.normalize('NFKC').replace(/[\u200b-\u200d\ufeff]/g,'')
     .replace(/\*\*/g,'').replace(/\r\n?|<br\s*\/?\s*>/gi,'\n')
+    .replace(/\n[ \t]*(?=QA\s*:?\s*@)/gi,' ')
     .replace(/(при[её]мк[ау][ \t:–—-]*)\n[ \t]*(?=\[[^\]\n]+\]\(https?:)/gi,'$1 ');
   for (const raw of normalized.split(/\n|\s+(?=[*•]\s+(?:провед|при[её]м))/i)) {
     const line = raw.trim().replace(/^(?:>\s*|(?:[*•–—-]|\d+[.)])\s+)*/,'').trim();
@@ -107,12 +110,16 @@ function parseToday(body) {
     const acceptance = line.match(/(?:^|\s)при[её]мк[а-яё]*[\s:–—-]*(.*)$/i);
     const taskLink = /https?:\/\/[^\s/)]+\/tasks\/task\/[^\s)]+/i.test(line);
     if (!acceptance && !taskLink) {skipped.push(line);continue;}
-    const task = (acceptance?.[1] || line).replace(/(?:^|\s+)QA(?:\s|:|$).*$/i,'').trim();
+    const description = acceptance?.[1] || line;
+    const assignment = description.match(/(?:^|\s+)QA\s*:?\s*((?:@[a-z0-9][a-z0-9._-]*[\s,;]*)+)$/i);
+    const qa = Array.from((assignment?.[1] || '').matchAll(/@([a-z0-9][a-z0-9._-]*)/gi),
+      match => match[1].replace(/\.+$/,'').toLowerCase());
+    const task = (assignment ? description.slice(0,assignment.index) : description).replace(/\s+QA\s*:?\s*—?$/i,'').trim();
     const link = line.match(/\[([^\]\n]+)\]\(<?(https?:\/\/[^\s>]+?)>?\)(?=\s|$|[.,;])/i);
     const rawUrl = task.match(/https?:\/\/[^\s<>]+/i)?.[0];
     const href = taskHref(link?.[2] || rawUrl);
     const title = link?.[1] || (rawUrl ? task.replace(rawUrl,'').trim() : task) || rawUrl || 'Без названия';
-    items.push({title,href});
+    items.push({title,href,qa});
   }
   return {items,skipped};
 }

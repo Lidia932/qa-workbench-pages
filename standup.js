@@ -26,13 +26,28 @@ function addPlan(kind, focus = true) {
   render();
 }
 
-function populatePeople(row, rename = new Map()) {
+function selectedPeople(row) {
+  return Array.from(row.querySelectorAll('.people input:checked'), el => el.value);
+}
+
+function addAcceptancePeople(row, initial = []) {
+  const field = document.createElement('fieldset');
+  field.className = 'people';
+  const legend = document.createElement('legend');
+  legend.textContent = 'Ведёт приёмку';
+  field.append(legend);
+  row.append(field);
+  populatePeople(row, new Map(), initial);
+}
+
+function populatePeople(row, rename = new Map(), initial = selectedPeople(row)) {
   const lead = row.querySelector('.lead');
   const previous = lead?.value;
-  const selected = new Set(Array.from(row.querySelectorAll('input:checked'), el => rename.get(el.value) ?? el.value));
+  const selected = new Set(initial.map(login => rename.get(login) ?? login).filter(Boolean));
   if (lead) lead.replaceChildren(new Option('Выбрать', ''));
   row.querySelectorAll('.people label').forEach(label => label.remove());
-  for (const [login, name] of people) {
+  for (const login of new Set([...people.keys(), ...selected])) {
+    const name = people.get(login) || '@' + login;
     if (lead) lead.add(new Option(name, login));
     const label = document.createElement('label');
     const check = document.createElement('input');
@@ -56,6 +71,16 @@ function appendPeople(parts, logins) {
     if (index) parts.push(', ');
     parts.push({login});
   });
+}
+
+function acceptanceParts(phrase, title, href, row) {
+  const parts = [phrase + ' ', {title, href}];
+  const qa = selectedPeople(row);
+  if (qa.length) {
+    parts.push(' QA ');
+    appendPeople(parts, qa);
+  }
+  return parts;
 }
 
 function taskHref(value) {
@@ -89,6 +114,7 @@ function manualTask(container) {
     render();
   };
   row.append(remove);
+  addAcceptancePeople(row);
   container.insertBefore(row, container.querySelector('.add-manual'));
   return row;
 }
@@ -116,7 +142,7 @@ function yesterday() {
       const title = row.querySelector('.task-name').value.trim();
       row.querySelector('.task-name').setCustomValidity(title ? '' : 'Введите название задачи');
       const href = taskHref(row.querySelector('.url').value);
-      if (title && href) rows.push([phrase + ' ', {title,href}]);
+      if (title && href) rows.push(acceptanceParts(phrase, title, href, row));
     }
   }
   return rows.concat(lines('#yesterday'));
@@ -144,11 +170,7 @@ function today() {
       const title = titleInput.value.trim();
       titleInput.setCustomValidity(!title ? 'Введите название задачи' : '');
       if (!title || !url.validity.valid) continue;
-      parts.push('Проведем приемку ', {title, href: url.value});
-      if (selected.length) {
-        parts.push(' QA ');
-        appendPeople(parts, selected);
-      }
+      parts.push(...acceptanceParts('Проведем приемку', title, url.value, row));
     }
     entries.push(parts);
   }
@@ -160,7 +182,7 @@ function previewPart(part) {
   if (part.login) {
     const chip = document.createElement('span');
     chip.className = 'mention';
-    chip.textContent = '@' + people.get(part.login);
+    chip.textContent = '@' + (people.get(part.login) || part.login);
     return chip;
   }
   const link = document.createElement('a');

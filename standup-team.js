@@ -6,7 +6,7 @@ const teamStatus = document.querySelector('#team-status');
 function setTeam(entries, rename = new Map()) {
   people.clear();
   for (const [login,name] of entries) people.set(login,name);
-  for (const row of plans.children) populatePeople(row,rename);
+  for (const field of document.querySelectorAll('#fields .people')) populatePeople(field.parentElement,rename);
   render();
 }
 try {
