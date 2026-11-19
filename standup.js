@@ -257,7 +257,7 @@ function render() {
     blocks.push('**' + name + ':**\n' + rows.map(parts => '* ' + parts.map(markdown).join('')).join('\n'));
   }
   generatedMessage = blocks.join('\n\n');
-  if (!messageText.hidden && !manuallyEdited) messageText.value = generatedMessage;
+  if (!manuallyEdited) messageText.value = generatedMessage;
   return messageText.hidden ? generatedMessage : messageText.value;
 }
 
@@ -299,14 +299,18 @@ document.querySelector('#reset-problems').onclick = () => {
   render();
 };
 document.querySelector('#fields').addEventListener('input', render);
-document.querySelector('#copy').onclick = async () => {
+function outgoingMessage() {
   const text = render();
   if (!text.trim()) {
     statusLine.textContent = 'Сообщение пустое.';
     messageText.focus();
     return;
   }
-  if (!validStandup()) return;
+  if (validStandup()) return text;
+}
+document.querySelector('#copy').onclick = async () => {
+  const text = outgoingMessage();
+  if (!text) return;
   try {
     await navigator.clipboard.writeText(text);
     statusLine.textContent = savePlan() ? 'Скопировано. План сохранён.' : 'Скопировано. Сохранить план в браузере не удалось.';
@@ -319,3 +323,26 @@ document.querySelector('#copy').onclick = async () => {
     statusLine.textContent = 'Выделенный текст можно скопировать вручную.';
   }
 };
+const sendStandup = document.querySelector('#send-standup');
+sendStandup.addEventListener('click', event => {
+  if (!outgoingMessage()) {
+    event.stopImmediatePropagation();
+    return;
+  }
+  statusLine.textContent = sendStandup.dataset.ready
+    ? 'Отправка в qa-standup…'
+    : 'Для отправки установите QA Merge Checker 1.5.0 и обновите вкладку.';
+}, {capture: true});
+sendStandup.addEventListener('qa-standup-sent', event => {
+  const result = JSON.parse(event.detail);
+  if (!/^[a-z0-9]{26}$/.test(result.id)) {
+    statusLine.textContent = result.error || 'Не удалось подтвердить отправку.';
+    return;
+  }
+  const link = document.createElement('a');
+  link.href = 'https://roistat.chat.platrum.ru/c9d2f3fa6bb6d63bbd9f589250d36698/pl/' + result.id;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.textContent = 'Открыть сообщение';
+  statusLine.replaceChildren('Отправлено в qa-standup. ', link);
+});

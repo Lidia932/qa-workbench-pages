@@ -54,7 +54,12 @@ textarea[hidden] { display: none; }
 #preview .mention { color: #12294b; background: #c1d9f5; border-radius: 3px; padding: 0 .16rem; }
 #preview a { display: inline; color: #ffe19a; padding: 0; text-decoration: underline; border: 0; }
 #preview a:hover { background: transparent; }
-#copy { margin: .8rem .5rem .4rem 0; background: #155c50; color: white; }
+.message-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin: .8rem 0 .4rem; }
+#copy { background: #155c50; color: white; }
+#send-standup { background: #255b93; border-color: #255b93; color: white; }
+#send-standup:disabled { opacity: .6; cursor: wait; }
+#send-standup-help:not([hidden]) { display: block; }
+#send-standup-help a, #status a { display: inline; padding: 0; border: 0; text-decoration: underline; }
 #status { font-size: .875rem; }
 .import-bar > summary { margin-bottom: .4rem; }
 main.wrap { padding-block: 1.1rem 2rem; }

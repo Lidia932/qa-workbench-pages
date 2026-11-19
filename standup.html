@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Стендап · Roistat QA</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="standup.css?v=manual2">
-  <script src="standup.js?v=count1" defer></script>
+  <link rel="stylesheet" href="standup.css?v=send1">
+  <script src="standup.js?v=send1" defer></script>
   <script src="standup-history.js?v=extension2" defer></script>
   <script src="standup-team.js?v=count1" defer></script>
 </head>
@@ -69,8 +69,12 @@
         </div>
         <div id="preview"></div>
         <textarea id="message-text" aria-label="Сообщение для чата" rows="12" hidden></textarea>
-        <button id="copy">Скопировать сообщение</button>
-        <button id="save-plan">Сохранить план</button>
+        <div class="message-actions">
+          <button id="copy">Скопировать сообщение</button>
+          <button id="send-standup" type="button">Отправить в qa-standup</button>
+          <button id="save-plan">Сохранить план</button>
+        </div>
+        <small id="send-standup-help">Для отправки войдите в Platrum в этом профиле Chrome, установите <a href="./downloads/qa-merge-checker-1.5.0.zip" download>QA Merge Checker 1.5.0</a> и обновите вкладку.</small>
         <span id="status" role="status"></span>
         <textarea id="manual-copy" aria-label="Текст для копирования" rows="8" readonly hidden></textarea>
       </div>
