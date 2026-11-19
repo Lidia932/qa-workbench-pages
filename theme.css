@@ -1,0 +1,73 @@
+.theme-toggle { width: 2.75rem; height: 2.75rem; display: grid; place-items: center; padding: 0; border-radius: 50%; }
+.brand .logo ~ .theme-toggle { margin-left: auto; }
+.brand .logo ~ a + .theme-toggle { margin-left: 0; }
+.theme-toggle svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.theme-toggle .sun, [data-theme="dark"] .theme-toggle .moon { display: none; }
+[data-theme="dark"] .theme-toggle .sun { display: inline; }
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --text: #e4efeb;
+  --muted: #b4c9c2;
+  --surface: #1c2a28;
+  --control: #152320;
+  --line: #4a6159;
+  --hover: #30473f;
+  --green: #9cdbbd;
+  --blue: #a4cfee;
+  --amber: #f0c18a;
+  --purple: #d2b8f0;
+  --green-bg: #203b30;
+  --blue-bg: #203544;
+  --amber-bg: #392e23;
+  --purple-bg: #342b40;
+  background: #111b19;
+  color: var(--text);
+}
+[data-theme="dark"] :is(header, .day, .library, .directory, .dropdown), [data-theme="dark"] :is(#team-panel, #RevertForm, #builder, #favorites li) { background-color: var(--surface); }
+[data-theme="dark"] :where(header, aside, a, fieldset, .commit, .review-item, .import-bar, .extension-row, .library li, .count label, .groups label, .team-actions) { border-color: var(--line); }
+[data-theme="dark"] :is(input, textarea, select, button), [data-theme="dark"] #builder :is(input, select) { background-color: var(--control); color: var(--text); border-color: var(--line); }
+[data-theme="dark"] input::placeholder, [data-theme="dark"] textarea::placeholder { color: #a4b6ae; }
+[data-theme="dark"] a { color: var(--blue); }
+[data-theme="dark"] :is(a, button):hover, [data-theme="dark"] .item[aria-selected=true] { background-color: var(--hover); }
+[data-theme="dark"] :focus-visible { outline-color: #8accfc; }
+[data-theme="dark"] :is(h2, legend, summary), [data-theme="dark"] .defaults summary, [data-theme="dark"] #st-settings summary { color: var(--green); }
+[data-theme="dark"] :is(small, a span, .library p, .people legend, .count legend, #builder small, #send-help, #no-favorites, #message) { color: var(--muted); }
+
+/* Catalogue and shortcuts */
+[data-theme="dark"] aside, [data-theme="dark"] .defaults { background: var(--green-bg); }
+[data-theme="dark"] #shortcuts a { --ink: var(--green); --tint: var(--green-bg); color: var(--text); background: var(--surface); border-color: var(--line); }
+[data-theme="dark"] #shortcuts [data-icon="pr"] { --ink: var(--blue); --tint: var(--blue-bg); }
+[data-theme="dark"] #shortcuts [data-icon="cases"] { --ink: var(--purple); --tint: var(--purple-bg); }
+[data-theme="dark"] #shortcuts [data-icon="deploy"] { --ink: var(--amber); --tint: var(--amber-bg); }
+[data-theme="dark"] #shortcuts a:is(:hover,:focus-visible) { background: var(--tint); border-color: var(--ink); }
+[data-theme="dark"] #catalog section { --accent: var(--green); --tint: var(--green-bg); }
+[data-theme="dark"] #catalog [data-group="Релиз"] { --accent: var(--amber); --tint: var(--amber-bg); }
+[data-theme="dark"] #catalog [data-group="Расширения"] { --accent: var(--purple); --tint: var(--purple-bg); }
+[data-theme="dark"] #catalog [data-group="Фокус-группы"] { --accent: var(--blue); --tint: var(--blue-bg); }
+[data-theme="dark"] .sticker { background-color: #e5ede8; border-radius: .5rem; }
+
+/* Standup, including QA settings */
+[data-theme="dark"] .day { --ink: var(--blue); --wash: var(--blue-bg); }
+[data-theme="dark"] .day.current { --ink: var(--green); --wash: var(--green-bg); }
+[data-theme="dark"] .day.blockers { --ink: var(--amber); --wash: var(--amber-bg); }
+[data-theme="dark"] .day > legend, [data-theme="dark"] .past summary { color: var(--ink); }
+[data-theme="dark"] .task .plan-head { color: var(--purple); border-color: var(--purple); background: var(--purple-bg); }
+[data-theme="dark"] .e2e .plan-head, [data-theme="dark"] .review-item .people { background: var(--blue-bg); color: var(--blue); }
+[data-theme="dark"] .outcome-select:has(option[value=""]:checked) { color: var(--amber); background: var(--amber-bg); }
+[data-theme="dark"] input[aria-invalid=true] { border-color: #f297a6; }
+[data-theme="dark"] .link-error { color: #ffafbb; }
+[data-theme="dark"] #team-rows fieldset button { color: #ffc4cc; background: #482a30; border-color: #92636a; }
+[data-theme="dark"] #new-person { color: var(--green); background: var(--green-bg); }
+
+/* Revert and focus groups */
+[data-theme="dark"] #RevertForm h2 { color: var(--amber); }
+[data-theme="dark"] .recent-side { --accent: var(--amber); --tint: var(--amber-bg); }
+[data-theme="dark"] .saved-side { --accent: var(--purple); --tint: var(--purple-bg); }
+[data-theme="dark"] .library.side { background: var(--tint); }
+[data-theme="dark"] .side summary { color: var(--accent); }
+[data-theme="dark"] .fg-icon-list li button { color: var(--accent); }
+[data-theme="dark"] .fg-main .result { background: var(--green-bg); }
+[data-theme="dark"] .account-groups, [data-theme="dark"] #account-list { background: var(--blue-bg); }
+[data-theme="dark"] .account-groups h2 { color: var(--blue); }
+[data-theme="dark"] .groups label:has(:checked) { background: var(--blue-bg); color: var(--blue); border-color: var(--blue); }
