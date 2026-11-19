@@ -3,7 +3,21 @@
 .defaults summary { color: #285844; font-weight: 600; cursor: pointer; }
 .defaults label { flex: 0 1 16rem; }
 .defaults input { margin-top: .25rem; }
-.recent { margin-top: .6rem; }
+.libraries { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem; margin-top: 1.25rem; align-items: start; }
+.library { background: white; border: 1px solid #cadbd4; border-top: 3px solid #166575; padding: .85rem 1rem; min-width: 0; }
+.library h2 { margin: 0 0 .6rem; }
+.library ul { list-style: none; padding: 0; margin: 0; }
+.library li { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .45rem; border-top: 1px solid #dbe4df; padding: .45rem 0; }
+.library code { flex: 1 1 100%; overflow-wrap: anywhere; }
+.library li button { font-size: .84rem; padding: .2rem .5rem; }
+.library p { color: #50635e; margin: 0; }
+.library form { margin: .5rem 0 .7rem; }
+.account-groups { margin-top: 1rem; }
+.account-groups small { display: block; }
+.account-groups small[hidden] { display: none; }
+.account-groups small a { display: inline; padding: 0; }
+.account-groups p:not(:empty) { margin: .6rem 0; }
+@media (max-width: 750px) { .libraries { grid-template-columns: 1fr; } }
 #send-help { display: block; color: #50635e; margin-top: .4rem; }
 #send-help[hidden] { display: none; }
 #send-help a { display: inline; padding: 0; text-decoration: underline; }

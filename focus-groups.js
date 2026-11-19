@@ -75,46 +75,121 @@ let defaultAccount = readLocal(accountKey) || '';
 if (!/^\d+$/.test(defaultAccount)) defaultAccount = '';
 defaultField.value = defaultAccount;
 
-function readRecent() {
+const savedKey = 'roistat-qa.fg.saved.v1';
+const listStatus = document.querySelector('#list-status');
+function readNames(key) {
   try {
-    const saved = JSON.parse(readLocal(recentKey));
-    return Array.isArray(saved) ? saved.filter(name => typeof name === 'string' && name && !/\s/.test(name)).slice(0, 20) : [];
+    const value = JSON.parse(readLocal(key));
+    return Array.isArray(value) ? value.filter(name => typeof name === 'string' && name && !/\s/.test(name)) : [];
   } catch { return []; }
 }
-let recent = readRecent();
-function refreshRecent() {
-  const select = args.querySelector('.recent select');
-  if (!select) return;
-  select.replaceChildren(new Option('Выбрать из списка', ''), ...recent.map(name => new Option(name, name)));
-  select.parentElement.hidden = !recent.length;
+let recent = readNames(recentKey).slice(0, 20);
+let saved = readNames(savedKey);
+const lookupId = document.querySelector('#lookup-id');
+const lookupButton = document.querySelector('#lookup-button');
+const lookupStatus = document.querySelector('#lookup-status');
+const useDefaultId = document.querySelector('#use-default-id');
+let accountGroups = [];
+lookupId.value = defaultAccount;
+useDefaultId.disabled = !defaultAccount;
+function renderAccountGroups() {
+  document.querySelector('#account-list').replaceChildren(...accountGroups.map(name => listRow(name, 'account')));
 }
+function clearLookup() {
+  accountGroups = [];
+  lookupStatus.textContent = '';
+  renderAccountGroups();
+}
+lookupId.addEventListener('input', clearLookup);
+useDefaultId.onclick = () => { lookupId.value = defaultAccount; clearLookup(); };
+document.querySelector('#account-lookup').onsubmit = event => {
+  event.preventDefault();
+  if (!lookupButton.dataset.ready) lookupStatus.textContent = 'Обновите QA Merge Checker и перезагрузите страницу.';
+};
+lookupButton.addEventListener('fg-lookup-start', () => {
+  clearLookup();
+  lookupStatus.textContent = 'Запрашиваю ФГ аккаунта ' + lookupId.value + '…';
+  lookupId.readOnly = lookupButton.disabled = useDefaultId.disabled = true;
+});
+lookupButton.addEventListener('fg-lookup-result', event => {
+  const result = JSON.parse(event.detail);
+  lookupId.readOnly = lookupButton.disabled = false;
+  useDefaultId.disabled = !defaultAccount;
+  if (result.account !== lookupId.value) { clearLookup(); return; }
+  accountGroups = result.groups || [];
+  renderAccountGroups();
+  lookupStatus.textContent = result.error || ('Аккаунт ' + result.account + (accountGroups.length ? ' · ФГ: ' + accountGroups.length : ' · Нет ФГ'));
+});
 function usedGroups() {
   if (form.elements.groups) return form.elements.groups.value.split(',').map(name => name.trim()).filter(Boolean);
   return form.elements.fg ? [form.elements.fg.value.trim()] : [];
 }
 function remember(names) {
   if (!names.length) return;
-  recent = [...new Set([...names, ...readRecent(), ...recent])].slice(0, 20);
+  recent = [...new Set([...names, ...readNames(recentKey), ...recent])].slice(0, 20);
   try { localStorage.setItem(recentKey, JSON.stringify(recent)); } catch { /* Keep suggestions for this tab. */ }
-  refreshRecent();
+  renderLibraries();
 }
-function addRecent(input) {
-  const label = document.createElement('label');
-  label.className = 'recent';
-  label.append('Недавние ФГ');
-  const select = document.createElement('select');
-  select.onchange = () => {
-    if (!select.value) return;
+
+function editSaved(name, remove = false) {
+  const previous = readNames(savedKey);
+  const next = remove ? previous.filter(item => item !== name) : [...new Set([name, ...previous])];
+  try { localStorage.setItem(savedKey, JSON.stringify(next)); }
+  catch { listStatus.textContent = 'Браузер не разрешил сохранить список.'; return false; }
+  saved = next;
+  listStatus.textContent = remove ? 'ФГ удалена из сохранённых.' : 'ФГ сохранена.';
+  renderLibraries();
+  return true;
+}
+function listRow(name, source) {
+  const row = document.createElement('li');
+  const code = document.createElement('code');
+  code.textContent = name;
+  row.append(code);
+  function action(text, handler) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = text;
+    button.setAttribute('aria-label', text + ' ' + name);
+    button.onclick = handler;
+    row.append(button);
+    return button;
+  }
+  action('Копировать', async () => {
+    try {
+      await navigator.clipboard.writeText(name);
+      listStatus.textContent = 'Скопировано: ' + name;
+    } catch {
+      const range = document.createRange();
+      range.selectNodeContents(code);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      listStatus.textContent = 'Название выделено для ручного копирования.';
+    }
+  });
+  const input = form.elements.fg || form.elements.groups;
+  if (input) action('В команду', () => {
     input.value = input.name === 'groups'
-      ? [...new Set([...input.value.split(',').map(name => name.trim()).filter(Boolean), select.value])].join(',')
-      : select.value;
+      ? [...new Set([...usedGroups(), name])].join(',') : name;
     input.dispatchEvent(new Event('input', {bubbles: true}));
-    select.value = '';
-  };
-  label.append(select);
-  args.append(label);
-  refreshRecent();
+    input.focus();
+  });
+  if (source === 'saved') action('Убрать', () => editSaved(name, true));
+  else if (!saved.includes(name)) action('Сохранить', () => editSaved(name));
+  return row;
 }
+function renderLibraries() {
+  for (const [source, names] of [['recent', recent], ['saved', saved]]) {
+    document.querySelector('#' + source + '-list').replaceChildren(...names.map(name => listRow(name, source)));
+    document.querySelector('#' + source + '-empty').hidden = Boolean(names.length);
+  }
+  renderAccountGroups();
+}
+document.querySelector('#save-group').onsubmit = event => {
+  event.preventDefault();
+  if (editSaved(event.target.elements.name.value.trim())) event.target.reset();
+};
 
 document.querySelector('#defaults').onsubmit = event => {
   event.preventDefault();
@@ -122,15 +197,25 @@ document.querySelector('#defaults').onsubmit = event => {
   const note = document.querySelector('#default-status');
   try {
     localStorage.setItem(accountKey, value);
+    if (!lookupId.readOnly && (!lookupId.value || lookupId.value === defaultAccount)) {
+      lookupId.value = value;
+      clearLookup();
+    }
     defaultAccount = value;
+    useDefaultId.disabled = !value || lookupId.readOnly;
     showCommand();
     note.textContent = value ? 'ID сохранён в этом браузере.' : 'ID по умолчанию удалён.';
   } catch { note.textContent = 'Браузер не разрешил сохранить ID.'; }
 };
 window.addEventListener('storage', event => {
-  if (event.key === recentKey) { recent = readRecent(); refreshRecent(); }
+  if (event.key === recentKey || event.key === savedKey || event.key === null) {
+    recent = readNames(recentKey).slice(0, 20);
+    saved = readNames(savedKey);
+    renderLibraries();
+  }
   if (event.key === accountKey) {
     defaultAccount = /^\d+$/.test(event.newValue || '') ? event.newValue : '';
+    useDefaultId.disabled = !defaultAccount || lookupId.readOnly;
     defaultField.value = defaultAccount;
     showCommand();
   }
@@ -183,9 +268,9 @@ function showCommand() {
       updatePreview();
     });
     args.append(label);
-    if (key === 'fg' || key === 'groups') addRecent(input);
   }
   args.hidden = !current[2].length;
+  renderLibraries();
   updatePreview();
 }
 

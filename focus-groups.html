@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Команды ФГ · Roistat QA</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="focus-groups.css?v=3">
-  <script src="focus-groups.js?v=2" defer></script>
+  <link rel="stylesheet" href="focus-groups.css?v=4">
+  <script src="focus-groups.js?v=4" defer></script>
 </head>
 <body>
   <header><div class="wrap brand"><span class="logo">QA</span> Roistat QA <a href="./index.html">Каталог</a></div></header>
@@ -40,8 +40,34 @@
           <a href="https://roistat.chat.platrum.ru/c9d2f3fa6bb6d63bbd9f589250d36698/channels/tools-product" target="_blank" rel="noopener noreferrer">Открыть tools-product ↗</a>
         </div>
         <small id="status" role="status"></small>
-        <small id="send-help">Для отправки войдите в Platrum в этом профиле Chrome и установите <a href="./index.html#extensions">QA Merge Checker 1.2.0</a>.</small>
+        <small id="send-help">Для отправки войдите в Platrum в этом профиле Chrome и установите <a href="./index.html#extensions">QA Merge Checker</a>.</small>
       </div>
+    </div>
+    <div class="libraries">
+      <div class="library" aria-labelledby="recent-title">
+        <h2 id="recent-title">Недавние ФГ</h2>
+        <ul id="recent-list"></ul>
+        <p id="recent-empty">Здесь появятся ФГ из скопированных и отправленных команд.</p>
+      </div>
+      <div class="library" aria-labelledby="saved-title">
+        <h2 id="saved-title">Сохранённые ФГ</h2>
+        <form id="save-group"><label>Название ФГ<input name="name" required pattern="[^,\s]+" autocomplete="off"></label><button>Добавить</button></form>
+        <ul id="saved-list"></ul>
+        <p id="saved-empty">Список пока пуст.</p>
+      </div>
+    </div>
+    <small id="list-status" role="status"></small>
+    <div class="library account-groups" aria-labelledby="account-groups-title">
+      <h2 id="account-groups-title">ФГ на аккаунте</h2>
+      <form id="account-lookup" autocomplete="off">
+        <label>ID аккаунта<input id="lookup-id" required pattern="[0-9]+" inputmode="numeric"></label>
+        <button type="button" id="use-default-id">Подставить ID по умолчанию</button>
+        <button id="lookup-button" type="submit">Запросить в tools-product</button>
+      </form>
+      <small>По нажатию в канал отправится команда <code>/erp show_user_focus_groups</code> с указанным ID. Список появится здесь.</small>
+      <small id="lookup-help">Для запроса нужен вход в Platrum и <a href="./index.html#extensions">QA Merge Checker 1.3.0</a>.</small>
+      <p id="lookup-status" role="status"></p>
+      <ul id="account-list"></ul>
     </div>
   </main>
 </body>
