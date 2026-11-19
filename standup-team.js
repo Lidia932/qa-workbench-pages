@@ -22,10 +22,8 @@ try {
   const saved = JSON.parse(localStorage.getItem(teamKey));
   if (Array.isArray(saved) && saved.every(item => Array.isArray(item) && item.length === 2 && item.every(v => typeof v === 'string'))) setTeam(saved);
 } catch { /* Defaults remain available when storage is disabled. */ }
-for (const container of [plans, pastPlans]) {
-  addPlan('release', container, false);
-  addPlan('release', container, false);
-}
+addPlan('release', plans, false);
+addPlan('release', plans, false);
 
 function teamRow(login = '', name = '') {
   const row = document.createElement('fieldset');

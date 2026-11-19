@@ -160,35 +160,37 @@ function validStandup() {
 
 function yesterday() {
   if (!document.querySelector('#review').hidden) return reviewedRows().concat(lines('#yesterday'));
-  return planRows(pastPlans, 'past-count').concat(lines('#yesterday'));
+  const count = document.querySelector('[name="past-count"]:checked').value;
+  const releases = count === '0' ? [] : [[count === '1' ? 'Провели 1 релиз' : 'Провели 2 релиза']];
+  return releases.concat(planRows(pastPlans), lines('#yesterday'));
 }
 
 function today() {
-  return planRows(plans, 'today-count').concat(lines('#other'));
+  const count = Number(document.querySelector('[name="today-count"]:checked').value);
+  return planRows(plans, count).concat(lines('#other'));
 }
 
-function planRows(container, countName) {
+function planRows(container, releaseCount = 0) {
   const entries = [];
-  const count = Number(document.querySelector('input[name="' + countName + '"]:checked').value);
   for (const row of container.children) {
-    const outcome = row.querySelector('.outcome-select')?.value;
-    const verb = outcome === 'no' ? 'Не провели' : 'Провели';
     if (row.classList.contains('release')) {
       const number = row.dataset.number;
-      row.hidden = Number(number) > count;
-      if (row.hidden || outcome === '') continue;
-      const parts = [outcome ? verb + ' релиз №' + number : 'Проведем ' + number + ' релиз'];
+      row.hidden = Number(number) > releaseCount;
+      if (row.hidden) continue;
+      const parts = ['Проведем ' + number + ' релиз'];
       const lead = row.querySelector('.lead').value;
-      if (lead) parts.push(outcome ? ' - ведущий ' : ' - ведет ', {login: lead});
+      if (lead) parts.push(' - ведет ', {login: lead});
       const selected = selectedPeople(row);
       if (selected.length) {
-        parts.push(lead ? ', ' : ' - ', outcome ? 'участники ' : 'участвуют ');
+        parts.push(lead ? ', участвуют ' : ' - участвуют ');
         appendPeople(parts, selected);
       }
       entries.push(parts);
       continue;
     }
 
+    const outcome = row.querySelector('.outcome-select')?.value;
+    const verb = outcome === 'no' ? 'Не провели' : 'Провели';
     const active = outcome !== '';
     const titleInput = row.querySelector('.task-name');
     const title = titleInput.value.trim();
