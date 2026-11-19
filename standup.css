@@ -13,7 +13,7 @@
 .reminder-panel form label { margin: 0; }
 .reminder-enable { display: flex; align-items: center; gap: .45rem; }
 .reminder-enable input { width: 1rem; height: 1rem; margin: 0; }
-.reminder-panel button { justify-self: start; }
+.reminder-actions { display: flex; flex-wrap: wrap; gap: .45rem; }
 .import-bar { padding-bottom: .8rem; margin-bottom: .8rem; border-bottom: 1px solid #d8e3df; }
 .import-bar button, .import-bar details { margin-top: .55rem; }
 .import-bar small { display: block; }
