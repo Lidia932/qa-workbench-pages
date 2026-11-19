@@ -16,6 +16,30 @@ let active = false;
 let starting = false;
 let lastReport = '';
 let refreshTimer;
+let revision;
+
+function explainFailure(message) {
+  const expected = message.match(/^\s*Expected(?: (?:value|length|string|substring|pattern|array|object))?:\s*([^\r\n]+)/im)?.[1]?.trim();
+  const received = message.match(/^\s*Received(?: (?:value|length|string|array|object))?:\s*([^\r\n]+)/im)?.[1]?.trim();
+  if (/One aggregate per number/i.test(message)) {
+    if (/^\d+$/.test(expected) && /^\d+$/.test(received)) {
+      return 'В распределении звонков номера повторяются. На ' + expected + ' строк приходится ' + received + ' уникальных номеров. Ожидалась одна строка на номер.';
+    }
+    return 'В распределении звонков ожидалась одна строка на каждый номер. Количество строк и уникальных номеров различается.';
+  }
+  if (/recovery (?:is )?required|requires recovery/i.test(message)) return 'Для тестового ресурса осталось незавершённое восстановление после предыдущего прогона. Подробности указывают, какой ресурс требует проверки.';
+  if (/ERR_NAME_NOT_RESOLVED|ENOTFOUND/.test(message)) return 'Не удалось найти сервер по имени. Проверьте подключение к рабочей сети и адрес сервера.';
+  if (/ECONNREFUSED|ERR_CONNECTION_REFUSED/.test(message)) return 'Сервер отклонил подключение. Тест не смог продолжить работу.';
+  if (/executable doesn't exist/i.test(message)) return 'Playwright не нашёл установленный браузер для этой версии тестов.';
+  if (/strict mode violation/i.test(message)) return 'Вместо одного элемента на странице найдено несколько. Тест не смог однозначно выбрать элемент.';
+  if (expected && received) return 'Проверка не прошла. Ожидалось: ' + expected + '. Получено: ' + received + '.';
+  const duration = message.match(/(?:timeout(?: of)?|timed out(?: after)?)\s+(\d+)\s*ms/i)?.[1];
+  if (/timeout|timed out/i.test(message)) return 'Истекло время ожидания' + (duration ? ' (' + Number(duration) / 1000 + ' с)' : '') + '. Проверяемое действие не завершилось вовремя.';
+  const first = message.trim().split(/\r?\n/)[0].replace(/^(?:Error|Ошибка):\s*/, '');
+  if (/[а-яё]/i.test(first)) return first;
+  if (/expect\(/.test(message)) return 'Фактический результат не соответствует условию проверки. Точное условие приведено в технических подробностях.';
+  return 'Playwright сообщил об ошибке. Точное сообщение и место сбоя приведены в технических подробностях.';
+}
 
 function element(tag, text) {
   const node = document.createElement(tag);
@@ -25,7 +49,7 @@ function element(tag, text) {
 async function api(route, options) {
   const response = await fetch('/api/' + route, options);
   const result = await response.json();
-  if (!response.ok) throw Error(result);
+  if (!response.ok) throw Object.assign(Error(result), { status: response.status });
   return result;
 }
 function showError(message) {
@@ -39,7 +63,7 @@ function updateSelection() {
   $('whole').indeterminate = checked > 0 && checked < tests.length;
   $('count').textContent = 'Выбрано: ' + selected.size;
   $('clear').disabled = !selected.size;
-  $('start').disabled = !selected.size || starting || active;
+  $('start').disabled = !revision || !selected.size || starting || active;
 }
 function drawSection() {
   const tests = groups.get($('section').value) || [];
@@ -72,13 +96,18 @@ function display(run) {
   $('heading').textContent = active ? 'Идёт прогон' : run.status === 'failed' ? 'Прогон завершился с ошибкой' : 'Прогон завершён';
   $('summary').textContent = [
     'Старт ' + new Date(run.started).toLocaleTimeString('ru'),
+    run.revision ? 'Stash master · ' + run.revision.slice(0, 8) : 'Локальный прогон',
     'Всего: ' + run.rows.length,
     ...Object.entries(labels).filter(([key]) => counts[key]).map(([key, label]) => label + ': ' + counts[key])
   ].join(' · ');
   $('progress').max = run.rows.length;
   $('progress').value = run.rows.length - (counts.queued || 0) - (counts.running || 0) - (counts.unfinished || 0);
   const expanded = new Set(Array.from($('results').querySelectorAll('details[open]'), box => box.dataset.id));
-  const nodes = run.rows.map(row => {
+  // Playwright groups tests by worker fixtures, even with one worker.
+  // Keep completed attempts first, then the current test and the waiting queue.
+  const phase = row => row.status === 'running' ? 1 : ['queued', 'unfinished'].includes(row.status) ? 2 : 0;
+  const ordered = [...run.rows].sort((a, b) => phase(a) - phase(b) || (a.order ?? 0) - (b.order ?? 0));
+  const nodes = ordered.map(row => {
     const line = element('div', '');
     line.className = 'result-row';
     const badge = element('span', labels[row.status]);
@@ -86,25 +115,32 @@ function display(run) {
     badge.dataset.status = row.status;
     line.append(badge, element('span', row.title));
     if (Number.isFinite(row.duration)) line.append(element('time', (row.duration / 1000).toLocaleString('ru', { maximumFractionDigits: 2 }) + ' с'));
+    if (row.error || row.status === 'failed') {
+      const explanation = element('p', row.error ? explainFailure(row.error) : 'Итог сценария отличается от результата, заданного в тесте.');
+      explanation.className = 'failure-summary';
+      line.append(explanation);
+    }
     if (row.error) {
       const details = element('details', '');
       details.dataset.id = row.id;
       details.open = expanded.has(row.id);
-      details.append(element('summary', 'Подробности'), element('pre', row.error));
+      details.append(element('summary', 'Технические подробности'), element('pre', row.error));
       line.append(details);
     }
     return line;
   });
   if (run.error) {
-    const reason = element('p', run.error);
-    reason.className = 'run-error';
-    nodes.unshift(reason);
+    const details = element('details', '');
+    details.dataset.id = 'run-error';
+    details.open = expanded.has(details.dataset.id);
+    details.append(element('summary', 'Технические подробности прогона'), element('pre', run.error));
+    nodes.unshift(element('p', explainFailure(run.error)), details);
   }
   $('results').replaceChildren(...nodes);
 }
 async function refresh() {
   clearTimeout(refreshTimer);
-  try { display(await api('run')); showError(''); }
+  try { display(await api('run')); }
   catch { active = true; updateSelection(); showError('Потеряна связь с пультом. Проверьте окно start.cmd.'); }
   refreshTimer = setTimeout(refresh, active ? 1000 : 5000);
 }
@@ -119,24 +155,38 @@ $('clear').onclick = () => { selected.clear(); drawSection(); };
 $('start').onclick = async () => {
   if (starting || active || !selected.size) return;
   starting = true;
+  showError('');
   updateSelection();
   try {
-    const run = await api('run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify([...selected]) });
+    const run = await api('run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [...selected], revision }) });
     display(run);
     $('report').scrollIntoView({ block: 'start' });
     await refresh();
-  } catch (error) { showError(error.message); }
+  } catch (error) {
+    showError(error.message);
+    if (error.status === 412) {
+      try { await loadCatalog(); } catch (cause) { showError(cause.message); }
+    }
+  }
   finally { starting = false; updateSelection(); }
 };
-async function init() {
-  const { tests, target } = await api('catalog');
+async function loadCatalog() {
+  const catalog = await api('catalog');
+  const { tests, target } = catalog;
+  revision = catalog.revision;
+  const previous = $('section').value;
+  const ids = new Set(tests.map(test => test.id));
+  for (const id of selected) if (!ids.has(id)) selected.delete(id);
+  groups.clear();
+  $('section').replaceChildren();
   for (const test of tests) {
     if (!groups.has(test.group)) groups.set(test.group, []);
     groups.get(test.group).push(test);
   }
   for (const [key, items] of groups) $('section').add(new Option((groupNames[key] || key) + ' (' + items.length + ')', key));
-  $('inventory').textContent = [target && 'Стенд: ' + target, 'Разделов: ' + groups.size, 'Тестов: ' + tests.length].filter(Boolean).join(' · ');
+  if (groups.has(previous)) $('section').value = previous;
+  const version = revision ? 'Stash master · ' + revision.slice(0, 8) : 'Работает прежний пульт. После прогона закройте его и откройте обновлённый start.cmd.';
+  $('inventory').textContent = [version, target && 'Стенд: ' + target, 'Разделов: ' + groups.size, 'Тестов: ' + tests.length].filter(Boolean).join(' · ');
   drawSection();
-  await refresh();
 }
-init().catch(() => showError('Не удалось загрузить каталог. Проверьте окно start.cmd и обновите страницу.'));
+loadCatalog().catch(error => { $('inventory').textContent = 'Каталог недоступен'; showError(error.message); }).finally(refresh);

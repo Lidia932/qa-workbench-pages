@@ -10,6 +10,7 @@ const port = Number(process.env.QA_WORKBENCH_PORT || 41731);
 const host = '127.0.0.1:' + port;
 const origin = 'http://' + host;
 const reporter = path.join(__dirname, 'reporter.cjs');
+const source = require('./source.cjs');
 const assets = new Map([
   ['/', ['panel.html', 'text/html']], ['/panel.js', ['panel.js', 'text/javascript']],
   ['/style.css', ['style.css', 'text/css']], ['/theme.css', ['theme.css', 'text/css']],
@@ -45,16 +46,29 @@ function launch(repo, args, onEvent) {
 
 async function serve(repo) {
   if (!isRepo(repo) || !fs.existsSync(playwright(repo))) throw Error('Нужна подготовленная копия cloud-e2e. Проверьте путь и установку зависимостей по README.');
-  let tests, listingError;
-  const listing = await launch(repo, ['--list'], event => {
-    if (event.type === 'catalog') tests = event.tests;
-    if (event.type === 'error') listingError = event.message;
-  });
-  if (listing.code !== 0 || !tests?.length) throw Error(listingError || listing.diagnostics || 'Playwright не нашёл тестов.');
-  const byId = new Map(tests.map(test => [test.id, test]));
   let current = null;
-  const configHelper = path.join(repo, 'src/helpers/runtimeConfig.js');
-  const target = fs.existsSync(configHelper) ? new URL(require(configHelper).loadRuntimeConfig().baseUrl).origin : '';
+  let catalog, loading;
+  async function syncCatalog() {
+    if (catalog && await source.head() === catalog.revision) return catalog;
+    const copy = await source.snapshot(repo);
+    try {
+      let tests, target, listingError;
+      const listing = await launch(copy.dir, ['--list'], event => {
+        if (event.type === 'catalog') { tests = event.tests; target = event.target; }
+        if (event.type === 'error') listingError = event.message;
+      });
+      if (listing.code !== 0 || !tests) throw Error(listingError || 'Playwright не смог прочитать список сценариев.');
+      catalog?.dispose();
+      catalog = { ...copy, tests, target, byId: new Map(tests.map(test => [test.id, test])) };
+      return catalog;
+    } catch (error) { copy.dispose(); throw error; }
+  }
+  function latest() {
+    if (current?.status === 'running') return Promise.resolve(catalog);
+    loading ??= syncCatalog().finally(() => { loading = null; });
+    return loading;
+  }
+  process.once('exit', () => { if (current?.status !== 'running') catalog?.dispose(); });
 
   async function execute(selected, run) {
     const rows = new Map(run.rows.map(row => [row.id, row]));
@@ -64,11 +78,13 @@ async function serve(repo) {
       const list = path.join(temp, 'selection.txt');
       fs.writeFileSync(list, selected.map(test => test.selector).join('\n'));
       let outcome;
-      const { code, diagnostics } = await launch(repo, ['--test-list', list, '--workers=1'], event => {
+      let sequence = 0;
+      const { code, diagnostics } = await launch(catalog.dir, ['--test-list', list, '--workers=1'], event => {
         if (event.type === 'error') run.error = event.message;
         if (event.type === 'end') outcome = event.status;
         const row = rows.get(event.id);
         if (!row) return;
+        row.order ??= ++sequence;
         if (event.type === 'running') row.status = 'running';
         if (event.type === 'result') Object.assign(row, { status: event.status, duration: event.duration, error: event.error });
       });
@@ -94,7 +110,11 @@ async function serve(repo) {
     res.setHeader('Content-Security-Policy', "default-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
     if (req.headers.host !== host) return send(403, 'Доступ только с этого компьютера.');
     try {
-      if (req.method === 'GET' && req.url === '/api/catalog') return send(200, { target, tests: tests.map(({ selector, ...test }) => test) });
+      if (req.url.startsWith('/api/') && req.headers['sec-fetch-site'] === 'cross-site') return send(403, 'Откройте локальный пульт.');
+      if (req.method === 'GET' && req.url === '/api/catalog') {
+        const { revision, target, tests } = await latest();
+        return send(200, { revision, target, tests: tests.map(({ selector, ...test }) => test) });
+      }
       if (req.method === 'GET' && req.url === '/api/run') return send(200, current);
       if (req.method === 'POST' && req.url === '/api/run') {
         if (req.headers.origin !== origin || req.headers['content-type'] !== 'application/json') return send(403, 'Запуск доступен из локального пульта.');
@@ -103,11 +123,15 @@ async function serve(repo) {
           body += chunk;
           if (body.length > 100000) return send(413, 'Слишком большой выбор.');
         }
-        const ids = JSON.parse(body);
-        if (!Array.isArray(ids) || !ids.length || ids.some(id => !byId.has(id))) return send(400, 'Выберите тесты из каталога.');
+        const { ids, revision } = JSON.parse(body) || {};
         if (current?.status === 'running') return send(409, 'Дождитесь окончания текущего прогона.');
+        const fresh = await latest();
+        if (current?.status === 'running') return send(409, 'Дождитесь окончания текущего прогона.');
+        if (revision !== fresh.revision) return send(412, 'В Stash изменились тесты. Проверьте обновлённый список и подтвердите запуск.');
+        const { byId } = fresh;
+        if (!Array.isArray(ids) || !ids.length || ids.some(id => !byId.has(id))) return send(400, 'Выберите тесты из каталога.');
         const selected = [...new Set(ids)].map(id => byId.get(id));
-        current = { status: 'running', started: Date.now(), rows: selected.map(({ id, title }) => ({ id, title, status: 'queued' })) };
+        current = { status: 'running', revision, started: Date.now(), rows: selected.map(({ id, title }) => ({ id, title, status: 'queued' })) };
         void execute(selected, current);
         return send(202, current);
       }
@@ -118,9 +142,9 @@ async function serve(repo) {
       const content = fs.readFileSync(file);
       res.writeHead(200, { 'Content-Type': type + '; charset=utf-8' });
       res.end(content);
-    } catch (error) { send(error instanceof SyntaxError ? 400 : 500, 'Не удалось обработать запрос.'); }
+    } catch (error) { send(error instanceof SyntaxError ? 400 : 503, error instanceof SyntaxError ? 'Не удалось прочитать выбор тестов.' : error.message); }
   });
   server.on('error', err => { console.error(err.code === 'EADDRINUSE' ? 'Порт занят. Если пульт уже открыт, используйте его окно.' : err.message); process.exitCode = 1; });
-  server.listen(port, '127.0.0.1', () => console.log('Пульт готов: ' + origin + ' · тестов: ' + tests.length));
+  server.listen(port, '127.0.0.1', () => console.log('Пульт готов: ' + origin));
 }
 chooseRepo().then(serve).catch(error => { console.error(error.message); process.exitCode = 1; });

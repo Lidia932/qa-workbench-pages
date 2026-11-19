@@ -18,7 +18,8 @@ module.exports = class WorkbenchReporter {
       return { id: test.id, group: file.includes('/') ? file.split('/')[0] : 'Общие',
         title: titles.join(' · '), file, selector };
     });
-    process.send({ type: 'catalog', tests });
+    const baseUrl = config.projects[0]?.use.baseURL;
+    process.send({ type: 'catalog', tests, target: baseUrl ? new URL(baseUrl).origin : '' });
   }
   onTestBegin(test) { process.send({ type: 'running', id: test.id }); }
   onTestEnd(test, result) {

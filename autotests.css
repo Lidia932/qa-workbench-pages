@@ -17,6 +17,7 @@
 .run-page progress { width: 100%; accent-color: #17664b; }
 .result-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .65rem 0; border-bottom: 1px solid var(--line,#dbe4df); overflow-wrap: anywhere; }
 .result-row time { margin-left: auto; }
+.result-row .failure-summary { flex-basis: 100%; margin: .2rem 0; }
 .result-row details { flex-basis: 100%; margin: 0; }
 .result-row pre, .run-error { white-space: pre-wrap; overflow-wrap: anywhere; }
 .badge { border-radius: .25rem; padding: .15rem .45rem; font-size: .85rem; font-weight: 650; color: #304751; background: #e9eff2; }
