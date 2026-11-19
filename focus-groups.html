@@ -5,13 +5,17 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Команды ФГ · Roistat QA</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="focus-groups.css">
-  <script src="focus-groups.js" defer></script>
+  <link rel="stylesheet" href="focus-groups.css?v=2">
+  <script src="focus-groups.js?v=2" defer></script>
 </head>
 <body>
   <header><div class="wrap brand"><span class="logo">QA</span> Roistat QA <a href="./index.html">Каталог</a></div></header>
   <main class="wrap">
     <h1>Команды фокус-групп</h1>
+    <form id="defaults" class="defaults">
+      <label>ID аккаунта по умолчанию<input id="default-account" inputmode="numeric" pattern="[0-9]+" placeholder="ID аккаунта"></label>
+      <button>Сохранить</button><small id="default-status" role="status"></small>
+    </form>
     <fieldset class="groups">
       <legend>Раздел</legend>
       <label><input type="radio" name="group" value="account" checked>Аккаунт</label>
@@ -29,9 +33,11 @@
         <textarea id="preview" rows="4" readonly spellcheck="false"></textarea>
         <div class="actions">
           <button type="submit" form="builder">Скопировать команду</button>
+          <button type="button" id="send-command">Отправить в tools-product</button>
           <a href="https://roistat.chat.platrum.ru/c9d2f3fa6bb6d63bbd9f589250d36698/channels/tools-product" target="_blank" rel="noopener noreferrer">Открыть tools-product ↗</a>
         </div>
         <small id="status" role="status"></small>
+        <small id="send-help">Для отправки войдите в Platrum в этом профиле Chrome и установите <a href="./index.html#extensions">QA Merge Checker 1.2.0</a>.</small>
       </div>
     </div>
   </main>

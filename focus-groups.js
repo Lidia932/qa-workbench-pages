@@ -61,6 +61,80 @@ const drafts = new Map();
 const lastAction = new Map();
 let group;
 let current;
+const recentKey = 'roistat-qa.fg.recent.v1';
+const accountKey = 'roistat-qa.fg.account.v1';
+const defaultField = document.querySelector('#default-account');
+const send = document.querySelector('#send-command');
+let sentCommand = '';
+let pendingGroups = null;
+
+function readLocal(key) {
+  try { return localStorage.getItem(key); } catch { return null; }
+}
+let defaultAccount = readLocal(accountKey) || '';
+if (!/^\d+$/.test(defaultAccount)) defaultAccount = '';
+defaultField.value = defaultAccount;
+
+function readRecent() {
+  try {
+    const saved = JSON.parse(readLocal(recentKey));
+    return Array.isArray(saved) ? saved.filter(name => typeof name === 'string' && name && !/\s/.test(name)).slice(0, 20) : [];
+  } catch { return []; }
+}
+let recent = readRecent();
+function refreshRecent() {
+  const select = args.querySelector('.recent select');
+  if (!select) return;
+  select.replaceChildren(new Option('Выбрать из списка', ''), ...recent.map(name => new Option(name, name)));
+  select.parentElement.hidden = !recent.length;
+}
+function usedGroups() {
+  if (form.elements.groups) return form.elements.groups.value.split(',').map(name => name.trim()).filter(Boolean);
+  return form.elements.fg ? [form.elements.fg.value.trim()] : [];
+}
+function remember(names) {
+  if (!names.length) return;
+  recent = [...new Set([...names, ...readRecent(), ...recent])].slice(0, 20);
+  try { localStorage.setItem(recentKey, JSON.stringify(recent)); } catch { /* Keep suggestions for this tab. */ }
+  refreshRecent();
+}
+function addRecent(input) {
+  const label = document.createElement('label');
+  label.className = 'recent';
+  label.append('Недавние ФГ');
+  const select = document.createElement('select');
+  select.onchange = () => {
+    if (!select.value) return;
+    input.value = input.name === 'groups'
+      ? [...new Set([...input.value.split(',').map(name => name.trim()).filter(Boolean), select.value])].join(',')
+      : select.value;
+    input.dispatchEvent(new Event('input', {bubbles: true}));
+    select.value = '';
+  };
+  label.append(select);
+  args.append(label);
+  refreshRecent();
+}
+
+document.querySelector('#defaults').onsubmit = event => {
+  event.preventDefault();
+  const value = defaultField.value.trim();
+  const note = document.querySelector('#default-status');
+  try {
+    localStorage.setItem(accountKey, value);
+    defaultAccount = value;
+    showCommand();
+    note.textContent = value ? 'ID сохранён в этом браузере.' : 'ID по умолчанию удалён.';
+  } catch { note.textContent = 'Браузер не разрешил сохранить ID.'; }
+};
+window.addEventListener('storage', event => {
+  if (event.key === recentKey) { recent = readRecent(); refreshRecent(); }
+  if (event.key === accountKey) {
+    defaultAccount = /^\d+$/.test(event.newValue || '') ? event.newValue : '';
+    defaultField.value = defaultAccount;
+    showCommand();
+  }
+});
 
 function updatePreview() {
   const values = Array.from(args.querySelectorAll('input'), input => {
@@ -68,6 +142,8 @@ function updatePreview() {
     return value || '‹' + fields[input.name].label + '›';
   });
   preview.value = ['/erp', current[1], ...values].join(' ');
+  if (preview.value !== sentCommand) sentCommand = '';
+  send.disabled = pendingGroups !== null || Boolean(sentCommand);
   status.textContent = '';
 }
 
@@ -90,7 +166,8 @@ function showCommand() {
     if (patterns[field.type]) input.pattern = patterns[field.type];
     if (field.type === 'number') input.inputMode = 'numeric';
     const defaultReason = group === 'all' ? 'релизнута' : 'тестирование';
-    input.value = draft.get(key) ?? (key === 'reason' && group !== 'other' ? defaultReason : '');
+    const initial = key === 'account' ? defaultAccount : (key === 'reason' && group !== 'other' ? defaultReason : '');
+    input.value = draft.get(key) ?? initial;
     label.append(input);
     if (field.hint) {
       const hint = document.createElement('small');
@@ -101,10 +178,12 @@ function showCommand() {
     }
     input.addEventListener('input', () => {
       input.setCustomValidity('');
-      draft.set(key, input.value);
+      if (key === 'account' && input.value === defaultAccount) draft.delete(key);
+      else draft.set(key, input.value);
       updatePreview();
     });
     args.append(label);
+    if (key === 'fg' || key === 'groups') addRecent(input);
   }
   args.hidden = !current[2].length;
   updatePreview();
@@ -120,20 +199,51 @@ function showGroup() {
 
 document.querySelector('.groups').addEventListener('change', showGroup);
 operation.addEventListener('change', showCommand);
-form.addEventListener('submit', async event => {
-  event.preventDefault();
+function validCommand() {
   for (const input of args.querySelectorAll('input')) {
     input.setCustomValidity(input.value.trim() ? '' : 'Заполните поле.');
   }
-  if (!form.reportValidity()) return;
+  return form.reportValidity();
+}
+form.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!validCommand()) return;
   updatePreview();
+  const names = usedGroups();
   try {
     await navigator.clipboard.writeText(preview.value);
+    remember(names);
     status.textContent = 'Команда скопирована';
   } catch {
     preview.focus();
     preview.select();
     status.textContent = 'Команда выделена. Скопируйте её вручную.';
   }
+});
+send.addEventListener('click', () => {
+  if (!validCommand()) return;
+  if (!send.dataset.ready) status.textContent = 'Для отправки обновите расширение и перезагрузите страницу.';
+});
+send.addEventListener('fg-sending', () => {
+  pendingGroups = usedGroups();
+  send.disabled = true;
+  status.textContent = 'Отправка…';
+});
+send.addEventListener('fg-result', event => {
+  if (pendingGroups === null) return;
+  const result = JSON.parse(event.detail);
+  if (result.ok) {
+    remember(pendingGroups);
+    sentCommand = result.command;
+    window.setTimeout(() => {
+      if (sentCommand === result.command) {
+        sentCommand = '';
+        send.disabled = pendingGroups !== null;
+      }
+    }, 1200);
+  }
+  pendingGroups = null;
+  send.disabled = sentCommand === preview.value;
+  status.textContent = result.ok ? 'Команда отправлена в tools-product.' : result.error;
 });
 showGroup();

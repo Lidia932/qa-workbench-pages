@@ -148,7 +148,7 @@ const postStatus = document.querySelector('#post-status');
 let discardPendingImport = false;
 loadPost.onclick = () => {
   discardPendingImport = false;
-  postStatus.textContent = loadPost.dataset.ready ? 'Читаю сообщение…' : 'Установите QA Merge Checker 1.1.0 из каталога и обновите вкладку. Для чтения нужен вход в Platrum.';
+  postStatus.textContent = loadPost.dataset.ready ? 'Читаю сообщение…' : 'Установите QA Merge Checker из каталога и обновите вкладку. Для чтения нужен вход в Platrum.';
 };
 loadPost.addEventListener('qa-standup-result', event => {
   if (discardPendingImport) return;
