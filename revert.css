@@ -1,0 +1,29 @@
+.brand a { margin-left: auto; border: 0; padding: .45rem; }
+main { padding-top: 1.4rem; }
+.revert-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: start; gap: 1.25rem; }
+#RevertForm, .directory { display: grid; gap: .85rem; margin: 0; padding: 1rem; background: white; border: 1px solid #cadbd4; border-left: 4px solid #92501d; }
+.directory { margin-top: 1rem; border-left-color: #356655; }
+.directory:not([open]) { display: block; }
+h2 { margin: 0 0 .6rem; }
+#RevertForm h2 { margin: 0; color: #865021; }
+summary { color: #356655; font-weight: 600; cursor: pointer; }
+.commit { padding-block: .5rem; border-block: 1px solid #dbe4df; }
+.commit input { margin-top: .5rem; }
+input, select, textarea { display: block; width: 100%; padding: .5rem .65rem; border: 1px solid #9eafa8; border-radius: 4px; background: white; color: inherit; font: inherit; }
+textarea { resize: vertical; }
+.field label { margin-bottom: .25rem; }
+.clearable, .selectSearch { position: relative; }
+.clearable input, .clearable textarea { padding-right: 2.35rem; }
+.clearX { display: none; position: absolute; top: .2rem; right: .2rem; border: 0; padding: .15rem .5rem; font-size: 1.15rem; }
+.clearable[data-hasvalue="1"] .clearX { display: block; }
+.dropdown { display: none; position: absolute; z-index: 2; inset: calc(100% + .2rem) 0 auto; padding: .25rem; background: white; border: 1px solid #a8bfb4; border-radius: 4px; box-shadow: 0 4px 12px #163e3020; }
+.selectSearch[data-open="1"] .dropdown { display: block; }
+.list { max-height: 13rem; overflow-y: auto; }
+.item { display: block; width: 100%; text-align: left; border: 0; }
+.item[aria-selected=true] { background: #e4f2ed; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; }
+.primary { width: fit-content; background: #155c50; color: white; }
+.primary:hover { background: #104b41; }
+pre { margin: 0 0 .65rem; background: #105363; color: white; border-radius: 6px; padding: 1rem; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
+small { color: #49605a; }
+@media (max-width: 750px) { .revert-grid { grid-template-columns: 1fr; } }
