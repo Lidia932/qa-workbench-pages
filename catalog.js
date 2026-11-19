@@ -14,6 +14,7 @@ function render() {
     if (![group, name, description].join(' ').toLocaleLowerCase('ru').includes(query)) continue;
     if (!groups.has(group)) {
       const section = document.createElement('section');
+      section.dataset.group = group;
       section.append(element('h2', group));
       groups.set(group, section);
     }
@@ -23,6 +24,11 @@ function render() {
     link.rel = 'noopener noreferrer';
     link.append(element('strong', name), element('span', description));
     groups.get(group).append(link);
+  }
+  const extensions = groups.get('Расширения');
+  if (extensions) {
+    extensions.id = 'extensions';
+    extensions.append(document.querySelector('#install-guide').content.cloneNode(true));
   }
   catalog.replaceChildren(...groups.values());
   document.querySelector('#empty').hidden = groups.size !== 0;
