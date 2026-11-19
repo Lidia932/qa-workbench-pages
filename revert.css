@@ -22,6 +22,7 @@ textarea { resize: vertical; }
 .item { display: block; width: 100%; text-align: left; border: 0; }
 .item[aria-selected=true] { background: #e4f2ed; }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; }
+.directory .actions { margin-top: 1rem; gap: .65rem; }
 .primary { width: fit-content; background: #155c50; color: white; }
 .primary:hover { background: #104b41; }
 pre { margin: 0 0 .65rem; background: #105363; color: white; border-radius: 6px; padding: 1rem; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
