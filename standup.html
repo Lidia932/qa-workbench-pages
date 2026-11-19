@@ -14,16 +14,35 @@
     <h1>Стендап</h1>
     <div class="workspace">
       <div id="fields">
-        <fieldset><legend>Вчера</legend>
-          <label for="yesterday">Итоги дня</label>
-          <textarea id="yesterday" rows="2" placeholder="Провели 2 релиза"></textarea>
+        <fieldset class="day past"><legend>Вчера</legend>
+          <fieldset class="count"><legend>Сколько релизов провели?</legend>
+            <label><input type="radio" name="past-count" value="0" checked>Без релизов</label>
+            <label><input type="radio" name="past-count" value="1">1 релиз</label>
+            <label><input type="radio" name="past-count" value="2">2 релиза</label>
+          </fieldset>
+          <div class="outcome">
+            <label><input id="accepted" type="checkbox">Провели приёмку</label>
+            <textarea id="accepted-tasks" aria-label="Задачи, по которым провели приёмку" placeholder="Названия задач, если нужны" rows="2" hidden></textarea>
+          </div>
+          <div class="outcome">
+            <label><input id="deferred" type="checkbox">Не провели приёмку</label>
+            <textarea id="deferred-tasks" aria-label="Задачи, по которым не провели приёмку" placeholder="Названия задач, если нужны" rows="2" hidden></textarea>
+          </div>
+          <details><summary>Другие итоги</summary>
+            <textarea id="yesterday" aria-label="Другие итоги" rows="2"></textarea>
+          </details>
         </fieldset>
-        <fieldset><legend>Сегодня</legend>
+        <fieldset class="day current"><legend>Сегодня</legend>
+          <fieldset class="count"><legend>Сколько релизов планируем?</legend>
+            <label><input type="radio" name="today-count" value="0">Без релизов</label>
+            <label><input type="radio" name="today-count" value="1" checked>1 релиз</label>
+            <label><input type="radio" name="today-count" value="2">2 релиза</label>
+          </fieldset>
           <div id="plans"></div>
-          <div class="actions"><button id="add-release">+ Релиз</button><button id="add-task">+ Приёмка</button></div>
+          <div class="actions"><button id="add-task">+ Приёмка</button></div>
           <label for="other">Другие планы</label><textarea id="other" rows="2"></textarea>
         </fieldset>
-        <fieldset><legend>Проблемы</legend>
+        <fieldset class="day blockers"><legend>Проблемы</legend>
           <label for="problems">Что мешает работе?</label><textarea id="problems" rows="2" placeholder="—"></textarea>
         </fieldset>
       </div>
@@ -38,9 +57,8 @@
   </main>
   <template id="release-template">
     <div class="plan release">
-      <div class="plan-head"><strong>Релиз</strong><button class="remove" aria-label="Удалить релиз" title="Удалить релиз">×</button></div>
-      <div class="pair"><label>Номер релиза<input class="number" type="number" min="1" step="1"></label>
-        <label>Ведёт<select class="lead"><option value="">Выбрать</option></select></label></div>
+      <div class="plan-head"><strong>Релиз</strong></div>
+      <label>Ведёт<select class="lead"><option value="">Выбрать</option></select></label>
       <fieldset class="people"><legend>Участвуют</legend></fieldset>
     </div>
   </template>

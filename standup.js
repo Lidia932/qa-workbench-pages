@@ -12,9 +12,8 @@ function addPlan(kind, focus = true) {
   const row = document.querySelector('#' + kind + '-template').content.firstElementChild.cloneNode(true);
   const lead = row.querySelector('.lead');
   if (lead) {
-    const numbers = Array.from(plans.querySelectorAll('.number'), input => Number(input.value));
-    row.querySelector('.number').value = Math.max(0, ...numbers) + 1;
-    row.querySelector('.number').required = true;
+    row.dataset.number = plans.querySelectorAll('.release').length + 1;
+    row.querySelector('strong').textContent = 'Релиз ' + row.dataset.number;
   }
   for (const [login, name] of people) {
     if (lead) lead.add(new Option(name, login));
@@ -25,7 +24,7 @@ function addPlan(kind, focus = true) {
     label.append(check, name);
     row.querySelector('.people').append(label);
   }
-  row.querySelector('.remove').onclick = () => {
+  if (!lead) row.querySelector('.remove').onclick = () => {
     row.remove();
     document.querySelector('#add-' + kind).focus();
     render();
@@ -48,14 +47,30 @@ function appendPeople(parts, logins) {
   });
 }
 
+function yesterday() {
+  const rows = [];
+  const n = document.querySelector('[name="past-count"]:checked').value;
+  if (n !== '0') rows.push([n === '1' ? 'Провели 1 релиз' : 'Провели 2 релиза']);
+  for (const [id, phrase] of [['accepted', 'Провели приемку'], ['deferred', 'Не провели приемку']]) {
+    const active = document.getElementById(id).checked;
+    document.getElementById(id + '-tasks').hidden = !active;
+    if (!active) continue;
+    const tasks = lines('#' + id + '-tasks');
+    if (!tasks.length) rows.push([phrase]);
+    for (const [task] of tasks) rows.push([phrase + ' ' + task]);
+  }
+  return rows.concat(lines('#yesterday'));
+}
+
 function today() {
   const entries = [];
   for (const row of plans.children) {
     const selected = Array.from(row.querySelectorAll('input:checked'), el => el.value);
     const parts = [];
     if (row.classList.contains('release')) {
-      const number = row.querySelector('.number').value;
-      if (!number) continue;
+      const number = row.dataset.number;
+      row.hidden = Number(number) > Number(document.querySelector('[name="today-count"]:checked').value);
+      if (row.hidden) continue;
       parts.push('Проведем ' + number + ' релиз');
       const lead = row.querySelector('.lead').value;
       if (lead) parts.push(' - ведет ', {login: lead});
@@ -108,7 +123,7 @@ function render() {
   preview.replaceChildren();
   statusLine.textContent = '';
   document.querySelector('#manual-copy').hidden = true;
-  const sections = [['Вчера', lines('#yesterday')], ['Сегодня', today()], ['Проблемы', lines('#problems')]];
+  const sections = [['Вчера', yesterday()], ['Сегодня', today()], ['Проблемы', lines('#problems')]];
   const blocks = [];
   for (const [name, rows] of sections) {
     const heading = document.createElement('strong');
@@ -126,7 +141,6 @@ function render() {
   return blocks.join('\n\n');
 }
 
-document.querySelector('#add-release').onclick = () => addPlan('release');
 document.querySelector('#add-task').onclick = () => addPlan('task');
 document.querySelector('#fields').addEventListener('input', render);
 document.querySelector('#copy').onclick = async () => {
@@ -145,5 +159,6 @@ document.querySelector('#copy').onclick = async () => {
     statusLine.textContent = 'Выделенный текст можно скопировать вручную.';
   }
 };
+addPlan('release', false);
 addPlan('release', false);
 addPlan('task', false);
