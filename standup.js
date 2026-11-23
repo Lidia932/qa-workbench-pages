@@ -20,6 +20,9 @@ try {
 } catch { /* The editor also works in memory. */ }
 let generatedMessage = '';
 let manuallyEdited = false;
+// Initial form rows are populated by the deferred history and team scripts.
+let formReady = false;
+document.addEventListener('DOMContentLoaded', () => { formReady = true; });
 const workActions = {start:'Начнем работу по', continue:'Продолжим работу по'};
 const e2eOutcomes = {yes:'Провели E2E-тест по', no:'Не провели E2E-тест по', review:'E2E-тест на ревью:'};
 
@@ -294,7 +297,15 @@ function render() {
     preview.append(heading, list);
     blocks.push('**' + name + ':**\n' + rows.map(parts => '* ' + parts.map(markdown).join('')).join('\n'));
   }
+  const previous = generatedMessage;
   generatedMessage = blocks.join('\n\n');
+  if (formReady && previous !== generatedMessage) {
+    if (manuallyEdited) messageText.value = mergeStandup(previous, messageText.value, generatedMessage);
+    if (savedMessage !== null) {
+      const merged = mergeStandup(previous, savedMessage, generatedMessage);
+      storeMessage(merged === generatedMessage ? null : merged);
+    }
+  }
   if (!manuallyEdited) messageText.value = savedMessage ?? generatedMessage;
   if (messageText.hidden && savedMessage !== null) renderEditedMessage(savedMessage);
   restoreMessage.hidden = !messageText.hidden || savedMessage === null;
