@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Стендап · Roistat QA</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="standup.css?v=reminder3">
+  <link rel="stylesheet" href="standup.css?v=save-message1">
   <link rel="stylesheet" href="theme.css">
   <script src="theme.js?v=system1"></script>
   <link rel="stylesheet" href="music.css?v=resume1">
   <script src="music.js?v=resume1" defer></script>
-  <script src="standup.js?v=icons1" defer></script>
-  <script src="standup-history.js?v=send-plan1" defer></script>
+  <script src="standup.js?v=save-message1" defer></script>
+  <script src="standup-history.js?v=save-message1" defer></script>
   <script src="standup-team.js?v=count1" defer></script>
 </head>
 <body>
@@ -96,6 +96,9 @@
       <div class="result">
         <h2>Сообщение для чата</h2>
         <div class="message-card">
+          <button id="save-message" type="button" title="Сохранить изменения" aria-label="Сохранить изменения" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h13l4 4v14H3V3zM7 3v6h9V3M7 21v-8h10v8"/></svg>
+          </button>
           <button id="edit-message" type="button" aria-label="Редактировать сообщение" title="Редактировать сообщение" aria-expanded="false" aria-controls="message-text">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path class="pencil" d="m4 16-1 5 5-1L20 8a2.8 2.8 0 0 0-4-4L4 16Zm10-10 4 4"/>
@@ -106,6 +109,7 @@
           <textarea id="message-text" aria-label="Сообщение для чата" rows="12" hidden></textarea>
         </div>
         <div class="message-actions">
+          <button id="restore-message" type="button" hidden>Вернуть текст из формы</button>
           <button id="copy">Скопировать сообщение</button>
           <button id="send-standup" type="button">Отправить в qa-standup</button>
         </div>

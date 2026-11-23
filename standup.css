@@ -60,11 +60,14 @@ textarea[hidden] { display: none; }
 .result { position: sticky; top: 1rem; }
 .result h2 { margin: 0 0 .7rem; }
 .message-card { position: relative; }
-#edit-message { position: absolute; inset: .45rem .45rem auto auto; width: 2.25rem; height: 2.25rem; padding: 0; display: grid; place-items: center; }
-#edit-message svg, .section-reset svg { width: 1.05rem; height: 1.05rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#edit-message, #save-message:not([hidden]) { position: absolute; inset: .45rem .45rem auto auto; width: 2.25rem; height: 2.25rem; padding: 0; display: grid; place-items: center; }
+#save-message:not([hidden]) { right: 3rem; background: #155c50; color: white; }
+#edit-message svg, #save-message svg, .section-reset svg { width: 1.05rem; height: 1.05rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 #edit-message[aria-expanded=false] .back, #edit-message[aria-expanded=true] .pencil { display: none; }
 #message-text { margin: 0; padding-top: 3rem; line-height: 1.5; }
 #preview > strong:first-child { display: block; padding-right: 2.5rem; }
+#preview > div { white-space: pre-wrap; }
+#preview > div:first-child { padding-right: 2.5rem; }
 #preview { background: #105363; color: #eefafa; padding: 1rem 1.2rem; border-radius: 6px; overflow-wrap: anywhere; }
 #preview ul { margin: .3rem 0 1rem; padding-left: 1.35rem; }
 #preview ul:last-child { margin-bottom: 0; }

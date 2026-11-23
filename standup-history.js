@@ -12,6 +12,10 @@ function storedPlans() {
   return JSON.parse(localStorage.getItem(planKey) || '{}');
 }
 function currentPlan() {
+  const editedToday = todaySection(messageText.value);
+  if (messageText.value !== generatedMessage && editedToday !== todaySection(generatedMessage)) {
+    return {date: dayKey(), items: parseToday(editedToday || '').items};
+  }
   const items = [];
   for (const row of plans.children) {
     if (row.hidden) continue;
@@ -159,11 +163,13 @@ loadPost.addEventListener('qa-standup-result', event => {
   if (result.error) {postStatus.textContent = result.error;return;}
   importBody(result.today, 'План из Platrum', postStatus);
 });
-document.querySelector('#parse-chat').onclick = () => {
-  const pasted = document.querySelector('#chat-text').value;
+function todaySection(pasted) {
   const message = pasted.includes('\\*\\*Сегодня:') ? pasted.replace(/\\([*():_])/g,'$1').replace(/\\[ \t]*$/gm,'') : pasted;
   const text = message.replace(/^[ \t#*_]*(Сегодня|Проблемы|Вчера)\s*:?[ \t*_]*$/gim, '$1:');
-  const body = text.match(/^Сегодня:\s*\n([\s\S]*?)(?=^(?:Проблемы|Вчера):|(?![\s\S]))/im)?.[1];
+  return text.match(/^Сегодня:[ \t]*\n([\s\S]*?)(?=^(?:Проблемы|Вчера):|(?![\s\S]))/im)?.[1];
+}
+document.querySelector('#parse-chat').onclick = () => {
+  const body = todaySection(document.querySelector('#chat-text').value);
   const status = document.querySelector('#parse-status');
   if (!body) {status.textContent = 'Не найден раздел «Сегодня».';return;}
   importBody(body, 'План из сообщения', status);

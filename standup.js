@@ -10,6 +10,14 @@ const preview = document.querySelector('#preview');
 const statusLine = document.querySelector('#status');
 const messageText = document.querySelector('#message-text');
 const editMessage = document.querySelector('#edit-message');
+const saveMessage = document.querySelector('#save-message');
+const restoreMessage = document.querySelector('#restore-message');
+const draftKey = 'roistat-qa.standup.edited-message';
+let savedMessage = null;
+try {
+  const draft = JSON.parse(sessionStorage.getItem(draftKey));
+  if (draft?.day === new Date().toDateString() && typeof draft.text === 'string' && draft.text.trim()) savedMessage = draft.text;
+} catch { /* The editor also works in memory. */ }
 let generatedMessage = '';
 let manuallyEdited = false;
 const workActions = {start:'Начнем работу по', continue:'Продолжим работу по'};
@@ -237,6 +245,36 @@ function markdown(part) {
   return '[' + title + '](' + href + ')';
 }
 
+function renderEditedMessage(text) {
+  const content = document.createDocumentFragment();
+  let list = null;
+  for (const line of text.split('\n')) {
+    const bullet = line.match(/^\s*[*•-]\s+(.*)$/);
+    const node = document.createElement(bullet ? 'li' : 'div');
+    if (bullet) {
+      if (!list) { list = document.createElement('ul'); content.append(list); }
+      list.append(node);
+    } else { list = null; content.append(node); }
+    const value = bullet ? bullet[1] : line;
+    const inline = /\[((?:\\.|[^\]\\])+)\]\((https?:\/\/[^\s)]+)\)|\*\*(.+?)\*\*|@([a-z0-9][a-z0-9._-]*)/gi;
+    let offset = 0;
+    for (const match of value.matchAll(inline)) {
+      node.append(value.slice(offset, match.index));
+      if (match[2] && taskHref(match[2])) node.append(previewPart({title: match[1].replace(/\\([\\[\]])/g, '$1'), href: match[2]}));
+      else if (match[3]) {
+        const strong = document.createElement('strong');
+        strong.textContent = match[3];
+        node.append(strong);
+      } else if (match[4]) node.append(previewPart({login:match[4]}));
+      else node.append(match[0]);
+      offset = match.index + match[0].length;
+    }
+    node.append(value.slice(offset));
+    if (!value) node.append(document.createElement('br'));
+  }
+  preview.replaceChildren(content);
+}
+
 function render() {
   preview.replaceChildren();
   statusLine.textContent = '';
@@ -257,24 +295,52 @@ function render() {
     blocks.push('**' + name + ':**\n' + rows.map(parts => '* ' + parts.map(markdown).join('')).join('\n'));
   }
   generatedMessage = blocks.join('\n\n');
-  if (!manuallyEdited) messageText.value = generatedMessage;
-  return messageText.hidden ? generatedMessage : messageText.value;
+  if (!manuallyEdited) messageText.value = savedMessage ?? generatedMessage;
+  if (messageText.hidden && savedMessage !== null) renderEditedMessage(savedMessage);
+  restoreMessage.hidden = !messageText.hidden || savedMessage === null;
+  return messageText.value;
 }
 
-editMessage.onclick = () => {
-  if (!messageText.hidden && manuallyEdited && !window.confirm('Заменить ваши правки текущим текстом из формы?')) return;
-  const editing = messageText.hidden;
+function setEditing(editing) {
   manuallyEdited = false;
   messageText.hidden = !editing;
   preview.hidden = editing;
-  editMessage.title = editing ? 'Вернуться к тексту из формы' : 'Редактировать сообщение';
+  saveMessage.hidden = !editing;
+  editMessage.title = editing ? 'Отменить редактирование' : 'Редактировать сообщение';
   editMessage.setAttribute('aria-label', editMessage.title);
   editMessage.setAttribute('aria-expanded', String(editing));
   render();
-  if (editing) messageText.focus();
+  (editing ? messageText : editMessage).focus();
+}
+editMessage.onclick = () => {
+  if (!messageText.hidden && manuallyEdited && !window.confirm('Закрыть редактор без сохранения последних правок?')) return;
+  setEditing(messageText.hidden);
+};
+function storeMessage(text) {
+  savedMessage = text;
+  try {
+    if (text === null) sessionStorage.removeItem(draftKey);
+    else sessionStorage.setItem(draftKey, JSON.stringify({day:new Date().toDateString(), text}));
+    return true;
+  } catch { return false; }
+}
+saveMessage.onclick = () => {
+  if (!messageText.value.trim()) {
+    statusLine.textContent = 'Сообщение пустое.';
+    messageText.focus();
+    return;
+  }
+  const stored = storeMessage(messageText.value === generatedMessage ? null : messageText.value);
+  setEditing(false);
+  statusLine.textContent = stored ? 'Изменения сохранены.' : 'Изменения применены. Браузер не сохранил их для обновления вкладки.';
+};
+restoreMessage.onclick = () => {
+  if (!window.confirm('Заменить сохранённое сообщение текущим текстом из формы?')) return;
+  storeMessage(null);
+  setEditing(false);
 };
 messageText.oninput = () => {
-  manuallyEdited = messageText.value !== generatedMessage;
+  manuallyEdited = messageText.value !== (savedMessage ?? generatedMessage);
   statusLine.textContent = '';
   document.querySelector('#manual-copy').hidden = true;
 };
